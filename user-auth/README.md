@@ -397,7 +397,11 @@ npm start
 
 ```javascript
 import express from "express";
-import { createAuthApp, authenticate, requirePlan } from "./모듈/src/index.js";
+import {
+  createAuthApp,
+  authenticate,
+  requirePlan,
+} from "../user-auth/src/index.js";
 
 const mainApp = express();
 
