@@ -1,0 +1,290 @@
+.drawer-sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+
+  width: 280px;
+  height: 100vh;
+
+  display: flex;
+  flex-direction: column;
+
+  background-color: #25272C;
+  color: #BDD9D7;
+
+  border-right: 1px solid #34404b;
+  box-sizing: border-box;
+
+  transform: translateX(-100%);
+  transition: transform 0.25s ease;
+
+  /*
+    overlay보다 반드시 높아야 함
+  */
+  z-index: 10001;
+}
+
+.drawer-sidebar.drawer-open {
+  transform: translateX(0);
+}
+
+.drawer-overlay {
+  position: fixed;
+  inset: 0;
+
+  background-color: rgba(0, 0, 0, 0.55);
+
+  /*
+    사이드바보다는 낮고 본문보다는 높게
+  */
+  z-index: 10000;
+}
+
+.drawer-header {
+  min-height: 68px;
+  padding: 0 18px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  border-bottom: 1px solid #34404b;
+  box-sizing: border-box;
+}
+
+.drawer-header strong {
+  font-size: 20px;
+  color: #BDD9D7;
+}
+
+.drawer-close {
+  width: 38px;
+  height: 38px;
+
+  border: none;
+  border-radius: 6px;
+
+  background-color: transparent;
+  color: #BDD9D7;
+
+  font-size: 28px;
+  cursor: pointer;
+}
+
+.drawer-close:hover {
+  background-color: rgba(255, 255, 255, 0.025);
+  border-color: #465d6d;
+}
+
+.drawer-menu {
+  display: flex;
+  flex-direction: column;
+
+  gap: 8px;
+  padding: 20px 12px;
+}
+
+.drawer-link {
+  display: flex;
+  align-items: center;
+
+  min-height: 46px;
+  padding: 0 16px;
+
+  border-radius: 7px;
+
+  color: #BDD9D7;
+  text-decoration: none;
+
+  box-sizing: border-box;
+}
+
+.drawer-link:hover {
+  background-color: rgba(255, 255, 255, 0.025);
+  border-color: #465d6d;
+}
+
+.drawer-link-active {
+  background-color: rgba(255, 255, 255, 0.025);
+  color: #BDD9D7;
+  font-weight: bold;
+}
+
+.drawer-logout {
+  margin: auto 15px 20px;
+  padding: 12px;
+
+  border: 1px solid #34404b;
+  border-radius: 7px;
+
+  background-color: transparent;
+  color: white;
+
+  cursor: pointer;
+}
+
+.drawer-logout:hover {
+  background-color: rgba(255, 255, 255, 0.025);
+  border-color: #D97878;
+  color: #D97878;
+}
+
+.monitoring-menu-wrapper {
+  position: relative;
+}
+
+.monitoring-menu-button {
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 13px 16px;
+  min-height: 46px;
+
+  border: none;
+  border-radius: 7px;
+
+  background-color: transparent;
+  color: #BDD9D7;
+
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.monitoring-arrow {
+  font-size: 12px;
+}
+
+.camera-popover {
+  position: absolute;
+
+  /*
+    사이드바 오른쪽 옆에 표시
+  */
+  top: 0;
+  left: calc(100% + 12px);
+
+  width: 250px;
+  max-height: 360px;
+
+  background-color: #25272C;
+  border: 1px solid #34404b;
+  border-radius: 9px;
+
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+
+  overflow: hidden;
+
+  /*
+    사이드바보다도 위에 표시
+  */
+  z-index: 10002;
+}
+
+.camera-popover::before {
+  content: "";
+
+  position: absolute;
+  top: 17px;
+  left: -7px;
+
+  width: 12px;
+  height: 12px;
+
+  background-color: #102536;
+  border-left: 1px solid #34404b;
+  border-bottom: 1px solid #34404b;
+
+  transform: rotate(45deg);
+}
+
+.camera-popover-header {
+  padding: 14px 16px;
+
+  border-bottom: 1px solid #34404b;
+
+  color: #BDD9D7;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.camera-popover-list {
+  max-height: 300px;
+  padding: 8px;
+
+  overflow-y: auto;
+   /* Firefox */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(189, 217, 215, 0.35) transparent;
+}
+
+/* Chrome, Edge, Safari */
+.camera-popover-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.camera-popover-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.camera-popover-list::-webkit-scrollbar-thumb {
+  background-color: rgba(189, 217, 215, 0.35);
+  border-radius: 10px;
+}
+
+.camera-popover-list::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(189, 217, 215, 0.6);
+}
+
+.camera-popover-item {
+  width: 100%;
+  min-height: 46px;
+
+  padding: 0 12px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+
+  border: none;
+  border-radius: 6px;
+
+  background-color: transparent;
+  color: #BDD9D7;
+
+  text-align: left;
+  cursor: pointer;
+}
+
+.camera-popover-item:hover {
+  background-color: rgba(255, 255, 255, 0.025);
+  border-color: #465d6d;
+}
+
+.camera-popover-status {
+  flex-shrink: 0;
+
+  font-size: 12px;
+}
+
+.camera-popover-status.online {
+  color: #6FBF9A;
+}
+.camera-popover-status.offline {
+  color: #D97878;
+}
+
+.camera-empty {
+  margin: 0;
+  padding: 14px 10px;
+
+  color: #b4b4b4;
+  font-size: 13px;
+}

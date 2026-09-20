@@ -1,0 +1,408 @@
+.monitoring-page {
+  width: 100%;
+  padding: 25px 35px 40px;
+
+  box-sizing: border-box;
+
+  color: #BDD9D7;
+}
+
+
+/* =========================
+   상단 카메라 정보
+========================= */
+
+.monitoring-header {
+  display: flex;
+  align-items: center;
+
+  margin-bottom: 20px;
+}
+
+
+.monitoring-title-area {
+  display: flex;
+  align-items: center;
+
+  gap: 12px;
+}
+
+
+.monitoring-title-area h2 {
+  margin: 0;
+
+  font-size: 24px;
+  font-weight: 700;
+}
+
+/* LIVE */
+
+.live-badge {
+  padding: 5px 8px;
+
+  border-radius: 5px;
+
+  background-color: #a63832;
+  color: white;
+
+  font-size: 12px;
+  font-weight: 600;
+}
+
+
+/* 연결 상태 */
+
+.connection-badge {
+  display: flex;
+  align-items: center;
+
+  gap: 6px;
+
+  padding: 5px 9px;
+
+  border-radius: 5px;
+
+  font-size: 13px;
+}
+
+
+.connection-badge.connected {
+  color: #6FBF9A;
+  background-color: rgba(76, 175, 80, 0.08);
+}
+
+
+.connection-badge.disconnected {
+  color: #D97878;
+  background-color: rgba(244, 67, 54, 0.08);
+}
+
+
+.status-dot {
+  width: 9px;
+  height: 9px;
+
+  border-radius: 50%;
+
+  background-color: currentColor;
+
+  display: inline-block;
+}
+
+
+/* =========================
+   메인 영역
+========================= */
+
+.monitoring-content {
+  display: grid;
+
+  grid-template-columns:
+    minmax(750px, 1000px) 330px;
+
+  gap: 40px;
+
+  width: fit-content;
+  align-items: start;
+  justify-content: start;
+}
+
+
+/* =========================
+   영상
+========================= */
+
+.video-section {
+  min-width: 0;
+}
+
+
+.real-time-video {
+  position: relative;
+
+  width: 100%;
+  max-width: 950px;
+  aspect-ratio: 16 / 9;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background-color: #05080c;
+
+  border: 1px solid #34404b;
+  border-radius: 8px;
+
+  overflow: hidden;
+
+  box-sizing: border-box;
+}
+
+
+.video-player {
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+}
+
+
+.video-placeholder {
+  color: #74808d;
+
+  font-size: 18px;
+}
+
+
+/* 영상 왼쪽 위 시간 */
+
+.video-time {
+  position: absolute;
+
+  top: 16px;
+  left: 16px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 8px;
+
+  padding: 6px 9px;
+
+  background-color: rgba(5, 10, 15, 0.72);
+
+  border-radius: 5px;
+
+  font-size: 14px;
+}
+
+
+.video-live {
+  padding: 3px 6px;
+
+  background-color: #b13b34;
+
+  border-radius: 4px;
+
+  color: white;
+
+  font-size: 12px;
+  font-weight: 600;
+}
+
+
+/* =========================
+   스트림 새로고침
+========================= */
+
+.stream-refresh-button {
+  position: absolute;
+
+  right: 16px;
+  bottom: 16px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 7px;
+
+  padding: 9px 13px;
+
+  /* border: 1px solid #34404b; */
+  border: none;
+  border-radius: 6px;
+
+  /* background-color: rgba(10, 22, 32, 0.88); */
+  background-color: transparent;
+
+  color: #BDD9D7;
+
+  cursor: pointer;
+
+  font-size: 13px;
+}
+
+
+.stream-refresh-button:hover {
+  background-color: rgba(255, 255, 255, 0.025);
+}
+
+
+.refresh-icon {
+  display: inline-flex;
+
+  align-items: center;
+  justify-content: center;
+
+  width: 18px;
+  height: 18px;
+
+  font-size: 21px;
+
+  transform-origin: center;
+}
+
+
+.refresh-icon.rotating {
+  animation: refreshRotate 0.7s linear infinite;
+}
+
+
+@keyframes refreshRotate {
+
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+
+}
+
+
+/* =========================
+   카메라 정보 패널
+========================= */
+
+.camera-info-panel {
+  width: 100%;
+
+  padding: 20px;
+
+  border: 1px solid #34404b;
+  border-radius: 8px;
+
+  background-color: rgba(12, 24, 34, 0.55);
+
+  box-sizing: border-box;
+}
+
+
+.info-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding-bottom: 14px;
+
+  border-bottom: 1px solid #34404b;
+}
+
+
+.info-panel-header h3 {
+  margin: 0;
+
+  font-size: 17px;
+}
+
+
+/* 이름 수정 */
+
+.edit-name-button {
+  padding: 6px 9px;
+
+  border: 1px solid #34404b;
+  border-radius: 5px;
+
+  background-color: transparent;
+
+  color: #BDD9D7;
+
+  font-size: 12px;
+
+  cursor: pointer;
+}
+
+
+.edit-name-button:hover {
+  background-color: rgba(255, 255, 255, 0.025);
+}
+
+
+/* 정보 Row */
+
+.info-row {
+  min-height: 42px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 15px;
+
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+
+  font-size: 13px;
+}
+
+
+.info-label {
+  color: #c4cbd1;
+
+  flex-shrink: 0;
+}
+
+
+.info-value {
+  color: #BDD9D7;
+
+  text-align: right;
+}
+
+
+/* 상태 정보 제목 */
+
+.info-section-title {
+  margin-top: 22px;
+  padding-bottom: 10px;
+
+  font-size: 15px;
+  font-weight: 700;
+
+  border-bottom: 1px solid #34404b;
+}
+
+
+/* 상태 */
+
+.status-value {
+  display: flex;
+  align-items: center;
+
+  gap: 6px;
+}
+
+
+.status-value.online {
+  color: #6FBF9A;
+}
+
+
+.status-value.offline {
+  color: #D97878;
+}
+
+
+/* =========================
+   이름 수정
+========================= */
+
+/* 수정 중에도 헤더 버튼 자리를 유지해 레이아웃이 변하지 않게 함 */
+.edit-name-button:disabled {
+  visibility: hidden;
+}
+
+/* 표시/수정 상태 모두 우측 정렬, 수정 폭 고정 (Row 높이는 min-height 42px로 유지) */
+.info-row span.info-name {
+  color: #BDD9D7;
+  font-size: 13px;
+  text-align: right;
+}
+
+.info-row .name-edit-row {
+  width: 200px;
+}
+
+
+

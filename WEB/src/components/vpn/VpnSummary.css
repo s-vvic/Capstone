@@ -1,0 +1,164 @@
+/* =========================
+   요약
+========================= */
+
+.vpn-summary-section {
+  padding: 18px;
+
+  background-color: #25272C;
+
+  border: 1px solid #34404b;
+  border-radius: 8px;
+}
+
+.vpn-summary-section h2 {
+  margin: 0 0 18px;
+
+  font-size: 18px;
+}
+
+.vpn-summary {
+  display: grid;
+
+  grid-template-columns:
+    repeat(4, minmax(150px, 1fr))
+    190px;
+
+  gap: 15px;
+}
+
+.vpn-summary-card,
+.vpn-refresh-card {
+  min-height: 95px;
+
+  padding: 16px;
+
+  background-color: #25272C;
+
+  border: 1px solid #34404b;
+  border-radius: 7px;
+
+  box-sizing: border-box;
+}
+
+.vpn-summary-card {
+  display: flex;
+  flex-direction: column;
+
+  gap: 10px;
+}
+
+.vpn-summary-card span {
+  color: #aeb7c2;
+
+  font-size: 13px;
+}
+
+.vpn-summary-card strong {
+  font-size: 26px;
+}
+
+.vpn-summary-card small {
+  font-size: 12px;
+
+  font-weight: 400;
+}
+
+.vpn-summary-card.connected strong {
+  color: #6FBF9A;
+}
+
+.vpn-summary-card.disconnected strong {
+  color: #D97878;
+}
+
+.vpn-summary-card.error strong {
+  color: #D6A85F;
+}
+
+.vpn-refresh-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  gap: 8px;
+
+  padding: 14px;
+
+  background-color: #25272C;
+
+  border: 1px solid #34404b;
+  border-radius: 7px;
+}
+
+.refresh-icon-wrapper {
+  width: 24px;
+  height: 24px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  flex-shrink: 0;
+
+  transform-origin: 50% 50%;
+}
+
+.refresh-icon {
+  width: 22px;
+  height: 22px;
+
+  display: block;
+  color: #BDD9D7;
+}
+
+.refresh-icon-wrapper.spinning {
+  animation: refresh-spin 0.6s linear;
+}
+
+@keyframes refresh-spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+
+.vpn-refresh-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 7px;
+
+  padding: 8px 14px;
+
+  background-color: transparent;
+  color: #BDD9D7;
+
+  border: 1px solid #BDD9D7;
+  border-radius: 6px;
+
+  font-size: 13px;
+  font-weight: 600;
+ 
+  cursor: pointer;
+
+  transition: 0.2s;
+}
+
+.vpn-refresh-button:hover {
+  background-color: rgba(255, 255, 255, 0.025);
+  border-color: #34404b;
+}
+
+.vpn-refresh-card span,
+.vpn-refresh-card small {
+  color: #89939f;
+
+  font-size: 11px;
+}

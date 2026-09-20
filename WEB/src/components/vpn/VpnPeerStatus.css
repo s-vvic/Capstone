@@ -1,0 +1,66 @@
+/* =========================
+   Client Peer VPN
+========================= */
+
+.peer-vpn-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  margin-bottom: 15px;
+  padding: 16px 20px;
+
+  background-color: #25272C;
+
+  border: 1px solid #34404b;
+  border-radius: 8px;
+}
+
+
+/* 왼쪽 정보 */
+
+.peer-vpn-info {
+  display: flex;
+  flex-direction: column;
+
+  gap: 7px;
+}
+
+.peer-vpn-title {
+  color: #BDD9D7;
+
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.peer-vpn-message {
+  font-size: 13px;
+}
+
+
+/* 연결 안 됨 */
+
+.peer-vpn-box.disconnected .peer-vpn-message {
+  color: #D97878;
+}
+
+
+/* 연결 중 */
+
+.peer-vpn-box.connecting .peer-vpn-message {
+  color: #D6A85F;
+}
+
+
+/* 연결 성공 */
+
+.peer-vpn-box.connected .peer-vpn-message {
+  color: #6FBF9A;
+}
+
+
+/* 연결 오류 */
+
+.peer-vpn-box.error .peer-vpn-message {
+  color: #D97878;
+}

@@ -1,0 +1,204 @@
+.board-summary {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+
+    gap: 12px;
+    margin: 0 30px 25px;
+
+    box-sizing: border-box;
+}
+
+.summary-card {
+    min-height: 100px;
+
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+
+    gap: 5px;
+    
+    padding: 20px 12px;
+
+    background-color: #25272C;
+    border: 1px solid #34404b;
+    border-radius: 8px;
+
+    box-sizing: border-box;
+}
+
+.summary-title {
+    position: absolute;
+}
+
+.summary-card {
+    position: relative;
+}
+
+.summary-title {
+    top: 15px;
+    left: 15px;
+
+    color: #BDD9D7;
+    font-size: 13px;
+}
+
+.summary-value {
+    margin-top: 22px;
+
+    color: #BDD9D7;
+    font-size: 28px;
+    font-weight: 700;
+}
+
+.summary-unit {
+    color: #b8c0c8;
+    font-size: 13px;
+}
+
+.summary-card.online .summary-value {
+    color: #6FBF9A;
+}
+
+.summary-card.offline .summary-value {
+    color: #D97878;
+}
+
+.summary-card.vpn .summary-value {
+    color: #60a5fa;
+}
+
+.summary-card.event .summary-value {
+    color: #D6A85F;
+}
+
+.summary-card.alert .summary-value {
+    color: #D6A85F;
+}
+
+.camera-list {
+    display: grid;
+    gap: 15px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.channel-selector {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin: 20px 30px;
+}
+
+.channel-selector button {
+    padding: 8px, 16px;
+    border: 1px solid #BDD9D7;
+    border-radius: 5px;
+    background-color: transparent;
+    color: #BDD9D7;
+    cursor: pointer;
+}
+
+.channel-selector button:hover {
+  background-color: #1b2f3d;
+}
+
+.channel-selector button.active {
+    background-color: #BDD9D7;
+    color: #25272C;
+}
+
+.multiview-toolbar {
+    display: flex;
+    align-items: center;
+
+    gap: 10px;
+
+    margin: 20px 30px;
+}
+
+.channel-selector {
+    display: flex;
+    gap: 8px;
+
+    margin: 0;
+}
+
+.channel-selector button {
+    padding: 8px 16px;
+
+    border: 1px solid #BDD9D7;
+    border-radius: 5px;
+
+    background-color: transparent;
+    color: #BDD9D7;
+
+    cursor: pointer;
+}
+
+.channel-selector button:hover {
+  background-color: #1b2f3d;
+}
+
+.channel-selector button.active {
+    background-color: #BDD9D7;
+    color: #25272C;
+}
+
+
+/* 검색창 */
+
+.camera-search {
+    margin-left: 15px;
+}
+
+.camera-search input {
+    width: 200px;
+    height: 36px;
+
+    padding: 0 12px;
+
+    box-sizing: border-box;
+
+    background-color: #25272C;
+    color: #BDD9D7;
+
+    border: 1px solid #34404b;
+    border-radius: 5px;
+
+    outline: none;
+}
+
+.camera-search input::placeholder {
+    color: #8d949c;
+}
+
+.camera-search input:focus {
+    border-color: #BDD9D7;
+}
+
+
+/* 온라인 / 즐겨찾기 필터 */
+
+.filter-button {
+    height: 36px;
+
+    padding: 0 13px;
+
+    border: 1px solid #34404b;
+    border-radius: 5px;
+
+    background-color: transparent;
+    color: #b8c0c8;
+
+    cursor: pointer;
+}
+
+.filter-button:hover {
+  background-color: rgba(255, 255, 255, 0.025);
+}
+
+.filter-button.active {
+  background-color: #34404b;
+    border-color: #34404b;
+    color: #BDD9D7;
+}

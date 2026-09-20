@@ -1,0 +1,78 @@
+.device-camera-name {
+    color: #BDD9D7;
+    font-size: 14px;
+    text-decoration: none;
+}
+
+/* 수정 모드: 입력창 + 확인/취소 버튼을 한 줄에 배치 (높이 고정 → 주변 요소가 밀리지 않음) */
+.name-edit-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+
+    width: 100%;
+    height: 30px;
+
+    box-sizing: border-box;
+}
+
+.name-input {
+    flex: 1;
+    min-width: 0;
+    height: 30px;
+
+    padding: 0 10px;
+
+    border: 1px solid #516474;
+    border-radius: 5px;
+    outline: none;
+    box-sizing: border-box;
+
+    background-color: #111e29;
+    color: #BDD9D7;
+
+    font-size: 13px;
+
+    transition: border-color 0.15s;
+}
+
+.name-input:focus {
+    border-color: #7895ac;
+}
+
+.edit-action {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+
+    width: 30px;
+    height: 30px;
+    padding: 0;
+
+    border: 1px solid #34404b;
+    border-radius: 5px;
+    background-color: transparent;
+
+    color: #BDD9D7;
+    cursor: pointer;
+
+    font-size: 15px;
+
+    transition: background-color 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.edit-action:hover {
+    background-color: rgba(255, 255, 255, 0.06);
+    color: #fff;
+}
+
+.edit-action.save {
+    border-color: rgba(110, 203, 99, 0.45);
+    color: #6FBF9A;
+}
+
+.edit-action.save:hover {
+    background-color: rgba(110, 203, 99, 0.14);
+    color: #8fe085;
+}

@@ -1,0 +1,131 @@
+
+.settings-page {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+
+  gap: 25px;
+
+  margin: 20px 30px 40px;
+}
+
+.settings-menu {
+  display: flex;
+  flex-direction: column;
+
+  padding: 10px;
+
+  background-color: #25272C;
+
+  border: 1px solid #34404b;
+  border-radius: 8px;
+
+  align-self: start;
+}
+
+.settings-menu-item {
+  padding: 13px 15px;
+
+  color: #b8c0c8;
+  text-decoration: none;
+
+  border-radius: 5px;
+}
+
+.settings-menu-item:hover {
+  background-color: rgba(255, 255, 255, 0.025);
+  border-color: #465d6d;
+  color: #BDD9D7;
+}
+
+.settings-menu-item.active {
+  background-color: rgba(255, 255, 255, 0.025) ;
+  color: #BDD9D7;
+
+  font-weight: 600;
+}
+
+.settings-content {
+  min-height: 500px;
+
+  padding: 25px;
+
+  background-color: #25272C;
+
+  border: 1px solid #34404b;
+  border-radius: 8px;
+}
+
+.settings-section h2 {
+  margin-top: 0;
+  margin-bottom: 25px;
+
+  font-size: 20px;
+}
+
+.setting-card {
+  min-height: 55px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 15px 5px;
+
+  border-bottom: 1px solid #35404b;
+}
+
+.setting-card p {
+  margin: 5px 0 0;
+
+  color: #8e98a4;
+  font-size: 12px;
+}
+
+.account-field {
+  display: flex;
+  flex-direction: column;
+
+  gap: 7px;
+  margin-bottom: 20px;
+}
+
+.account-field label {
+  color: #BDD9D7;
+  font-size: 13px;
+}
+
+.account-field input,
+.setting-card select {
+  padding: 9px 10px;
+
+  background-color: rgba(255, 255, 255, 0.025);
+  color: #BDD9D7;
+
+  border: 1px solid #495460;
+  border-radius: 5px;
+}
+
+.settings-button,
+.danger-button {
+  padding: 9px 15px;
+
+  margin-right: 8px;
+
+  border-radius: 5px;
+
+  cursor: pointer;
+}
+
+.settings-button {
+  background-color: transparent;
+  color: #BDD9D7;
+
+  border: 1px solid #BDD9D7;
+}
+
+.danger-button {
+  background-color: transparent;
+  color: #D97878;
+
+  border: 1px solid #D97878;
+}

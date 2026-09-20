@@ -1,0 +1,242 @@
+.login-page {
+  width: 100%;
+  min-height: 100vh;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  background-color: #25272C;
+
+  color: #BDD9D7;
+
+  box-sizing: border-box;
+}
+
+
+/* 전체 로그인 영역 */
+.login-container {
+  width: 620px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+
+/* 제목 */
+.login-title {
+  margin: 0 0 45px;
+
+  color: #BDD9D7;
+
+  font-size: 48px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+
+/* 로그인 카드 */
+.login-card {
+  width: 620px;
+
+  display: flex;
+  flex-direction: column;
+
+  box-sizing: border-box;
+
+  padding: 0;
+  background-color: transparent;
+  border: none;
+}
+
+
+/* 입력창 영역 */
+.login-inputs {
+  width: 100%;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 18px;
+}
+
+
+/* 공통 input */
+.login-input {
+  width: 100%;
+  height: 62px;
+
+  padding: 0 20px;
+
+  box-sizing: border-box;
+
+  color: #BDD9D7;
+
+  font-size: 16px;
+
+  background-color: transparent;
+
+  border: 1px solid #34404b;
+  border-radius: 10px;
+
+  outline: none;
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+
+.login-input::placeholder {
+  color: #8d949c;
+}
+
+
+.login-input:focus {
+  border-color: #BDD9D7;
+
+  box-shadow: 0 0 0 1px #BDD9D7;
+}
+
+/* 비밀번호 영역 */
+.login-password-box {
+  position: relative;
+
+  width: 100%;
+}
+
+
+.login-password-box .login-input {
+  padding-right: 55px;
+}
+
+
+/* 비밀번호 보기 */
+.eye-button {
+  position: absolute;
+
+  top: 50%;
+  right: 18px;
+
+  transform: translateY(-50%);
+
+  width: 34px;
+  height: 34px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0;
+
+  color: #b8c0c8;
+  background: transparent;
+
+  border: none;
+
+  font-size: 16px;
+
+  cursor: pointer;
+}
+
+
+.eye-button:hover {
+  color: #BDD9D7;
+}
+
+
+/* 로그인 버튼 */
+.login-button {
+  width: 100%;
+  height: 62px;
+
+  margin-top: 28px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color: #25272C;
+
+  font-size: 17px;
+  font-weight: 700;
+
+  background-color: #BDD9D7;
+
+  border-radius: 8px;
+  border: none;
+
+  cursor: pointer;
+
+  transition:
+    background-color 0.2s
+    transform 0.1s;
+}
+
+
+.login-button:hover {
+  background-color: #9FC5C4;
+}
+
+
+.login-button:active {
+  transform: translateY(1px);
+}
+
+
+.login-button:focus {
+  outline: none;
+}
+
+
+/* 계정 관련 링크 */
+.account-links {
+  margin-top: 28px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 14px;
+}
+
+
+.account-link {
+  padding: 0;
+
+  color: #b8c0c8;
+
+  font-size: 14px;
+
+  background: transparent;
+
+  border: none;
+
+  cursor: pointer;
+}
+
+
+.account-link:hover {
+  color: #BDD9D7;
+  text-decoration: underline;
+}
+
+
+.divider {
+  color: #34404b;
+  font-size: 12px;
+}
+
+.login-error {
+  margin: 12px 0 0;
+
+  color: #BDD9D7;
+
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.login-error-auth {
+  color: #D97878;
+}

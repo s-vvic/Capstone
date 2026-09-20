@@ -1,0 +1,480 @@
+
+
+.main-layout {
+  min-height: 100vh;
+  min-width: 1200px;
+  background-color: #25272C;
+  color:#BDD9D7;
+}
+
+/* 왼쪽 헤더 */
+
+.common-header {
+  width: 100%;
+  height: 100px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 0 25px;
+
+  box-sizing: border-box;
+  color: #BDD9D7;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.menu-button {
+  width: 45px;
+  height: 45px;
+
+  flex-shrink: 0;
+
+  background-color: transparent;
+  color: #BDD9D7;
+  border: 1px solid #BDD9D7;
+  border-radius: 5px;
+
+  font-size: 18px;
+
+  top: 8px;
+  left: 10px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  cursor: pointer;
+
+  z-index: 100;
+}
+
+.menu-button:hover {
+  background-color: rgba(255, 255, 255, 0.025);
+}
+
+.header {
+  flex-direction: column;
+  position: relative;
+}
+
+.common-header-title {
+  margin: 0;
+
+  color: #BDD9D7;
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+/* 오른쪽 헤더 */
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  
+  gap: 10px;
+}
+
+.header-icon-button {
+  position: relative;
+
+  width: 42px;
+  height: 42px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0;
+
+  background-color: transparent;
+  color: #BDD9D7;
+
+  border: none;
+  border-radius: 6px;
+
+  cursor: pointer;
+}
+
+.header-icon-button:hover {
+  background-color: rgba(255, 255, 255, 0.025);
+}
+
+.header-icon {
+  width: 23px;
+  height: 23px;
+}
+
+.notification-badge {
+  position: absolute;
+
+  top: 2px;
+  right: 1px;
+
+  min-width: 16px;
+  height: 16px;
+
+  padding: 0 3px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  box-sizing: border-box;
+
+  background-color: #ef4444;
+  color: #BDD9D7;
+  
+  border-radius: 10px;
+
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.header-action-divier {
+  width: 1px;
+  height: 32px;
+
+  margin: 0 7px;
+
+  background-color: #3c444e;
+}
+
+/* 사용자 영역 */
+
+.user-area {
+  position: relative;
+}
+
+.user-button {
+  height: 45px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 8px;
+
+  padding: 0 8px;
+
+  background-color: transparent;
+  color: #BDD9D7;
+
+  border: none;
+  border-radius: 6px;
+
+  cursor: pointer;
+}
+
+.user-button:hover {
+  background-color: rgba(255, 255, 255, 0.025);
+}
+
+.user-icon {
+  width: 30px;
+  height: 30px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background-color: #303844;
+
+  border-radius: 50%;
+}
+
+.user-icon svg {
+  width: 19px;
+  height: 19px;
+}
+
+.user-name {
+  font-size: 14px;
+}
+
+.user-arrow {
+  margin-left: 2px;
+  font-size: 12px;
+  transition: transform 0.2s;
+}
+
+.user-arrow.open {
+  transform: rotate(180deg);
+}
+
+/* 사용자 드롭다운 */
+
+.user-menu {
+  position: absolute;
+
+  top: 52px;
+  right: 0;
+
+  width: 150px;
+
+  padding: 6px;
+
+  background-color: #25272C;
+
+  border: 1px solid #34404b;
+  border-radius: 7px;
+
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+
+  z-index: 200;
+}
+
+.user-menu button {
+  width: 100%;
+
+  padding: 10px 12px;
+
+  text-align: left;
+
+  background-color: transparent;
+  color: #BDD9D7;
+
+  border: none;
+  border-radius: 5px;
+
+  cursor: pointer;
+}
+
+.user-menu button:hover {
+  background-color: rgba(255, 255, 255, 0.025);
+}
+
+
+.page-content {
+  width: 100%;
+  min-height: calc(100vh - 75px);
+
+  box-sizing: border-box;
+}
+
+
+.main-layout {
+  position: relative;
+}
+
+.header-dropdown-wrapper {
+  position: relative;
+
+  display: flex;
+  align-items: center;
+}
+
+
+/* =========================
+   공통 드롭다운
+========================= */
+
+.header-dropdown {
+  position: absolute;
+
+  top: 50px;
+  right: 0;
+
+  background-color: #20262f;
+
+  color: #BDD9D7;
+
+  border: 1px solid #414955;
+  border-radius: 7px;
+
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.35);
+
+  overflow: hidden;
+
+  z-index: 500;
+}
+
+
+/* =========================
+   알림 드롭다운
+========================= */
+
+.notification-dropdown {
+  width: 290px;
+}
+
+.dropdown-header {
+  height: 45px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 0 14px;
+
+  border-bottom: 1px solid #414955;
+}
+
+.dropdown-header strong {
+  font-size: 14px;
+  color: #BDD9D7;
+}
+
+.dropdown-header button {
+  padding: 0;
+
+  background-color: transparent;
+  color: #BDD9D7;
+
+  border: none;
+
+  font-size: 12px;
+
+  cursor: pointer;
+}
+
+.dropdown-header button:hover {
+  color: #BDD9D7
+}
+
+
+.notification-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.notification-item {
+  width: 100%;
+
+  display: flex;
+  align-items: flex-start;
+
+  gap: 10px;
+
+  padding: 12px 14px;
+
+  background-color: transparent;
+  color: #BDD9D7;
+
+  border: none;
+  border-bottom: 1px solid #34404b;
+
+  text-align: left;
+
+  cursor: pointer;
+}
+
+.notification-item:last-child {
+  border-bottom: none;
+}
+
+.notification-item:hover {
+  background-color: rgba(255, 255, 255, 0.025);
+}
+
+.notification-dot {
+  width: 7px;
+  height: 7px;
+
+  margin-top: 6px;
+
+  flex-shrink: 0;
+
+  background-color: #D97878;
+
+  border-radius: 50%;
+}
+
+.notification-content {
+  display: flex;
+  flex-direction: column;
+
+  gap: 3px;
+}
+
+.notification-content strong {
+  font-size: 13px;
+  color: #BDD9D7;
+}
+
+.notification-content span {
+  color: #BDD9D7;
+
+  font-size: 12px;
+}
+
+.notification-content small {
+  color: #BDD9D7;
+
+  font-size: 11px;
+}
+
+
+/* =========================
+   설정 드롭다운
+========================= */
+
+.settings-dropdown {
+  width: 160px;
+
+  padding: 6px;
+}
+
+.settings-dropdown button {
+  width: 100%;
+
+  padding: 10px 12px;
+
+  background-color: transparent;
+  color: #BDD9D7;
+
+  border: none;
+  border-radius: 5px;
+
+  text-align: left;
+
+  cursor: pointer;
+}
+
+.settings-dropdown button:hover {
+  background-color: rgba(255, 255, 255, 0.025);
+}
+
+
+/* =========================
+   사용자 드롭다운
+========================= */
+
+.user-dropdown {
+  width: 130px;
+
+  padding: 6px;
+}
+
+.user-dropdown button {
+  width: 100%;
+
+  padding: 10px 12px;
+
+  color: #BDD9D7;
+  background-color: transparent;
+
+  border: none;
+  border-radius: 5px;
+
+  text-align: left;
+
+  cursor: pointer;
+}
+
+.user-settings {
+  color: #BDD9D7;
+}
+
+.logout-button {
+  color: #D97878;
+}
+
+.logout-button:hover {
+  background-color: #3a292d;
+}

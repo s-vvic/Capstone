@@ -1,0 +1,126 @@
+.vpn-check-page {
+  width: 100%;
+  height: 100vh;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  background-color: #25272C;
+  color: #BDD9D7;
+}
+
+
+.vpn-check-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  gap: 20px;
+}
+
+
+.vpn-check-box h1 {
+  margin: 0;
+
+  font-size: 36px;
+  font-weight: 700;
+}
+
+
+/* =========================
+   상태 메시지
+========================= */
+
+.vpn-message {
+  margin: 0;
+
+  font-size: 18px;
+  font-weight: 600;
+}
+
+
+/* 연결 확인 중 */
+.vpn-message.checking {
+  color: #D6A85F;
+}
+
+
+/* 연결 성공 */
+.vpn-message.success {
+  color: #6FBF9A;
+}
+
+
+/* 연결 실패 */
+.vpn-message.fail {
+  color: #D97878;
+}
+
+
+/* =========================
+   로딩 휠
+========================= */
+
+.vpn-loader {
+  width: 52px;
+  height: 52px;
+
+  border: 5px solid rgba(245, 166, 35, 0.25);
+  border-top-color: #D6A85F;
+
+  border-radius: 50%;
+
+  animation: vpn-spin 0.8s linear infinite;
+}
+
+
+@keyframes vpn-spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+
+/* =========================
+   성공 체크 아이콘
+========================= */
+
+.vpn-success-icon {
+  font-size: 58px;
+
+  color: #6FBF9A;
+
+  animation: vpn-icon-pop 0.3s ease-out;
+}
+
+
+/* =========================
+   실패 아이콘
+========================= */
+
+.vpn-fail-icon {
+  font-size: 58px;
+
+  color: #D97878;
+
+  animation: vpn-icon-pop 0.3s ease-out;
+}
+
+
+/* 아이콘 등장 효과 */
+@keyframes vpn-icon-pop {
+  0% {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}

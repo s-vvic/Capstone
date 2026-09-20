@@ -1,0 +1,265 @@
+/* =========================
+   Table
+========================= */
+
+.vpn-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.vpn-table {
+  width: 100%;
+  min-width: 1120px;
+
+  border-collapse: collapse;
+  table-layout: fixed;
+
+  font-size: 12px;
+}
+
+
+/* =========================
+   Column Width
+========================= */
+
+.col-name {
+  width: 13%;
+}
+
+.col-serial {
+  width: 13%;
+}
+
+.col-status {
+  width: 12%;
+}
+
+.col-ip {
+  width: 12%;
+}
+
+.col-handshake {
+  width: 14%;
+}
+
+.col-error {
+  width: 14%;
+}
+
+.col-recovery {
+  width: 12%;
+}
+
+.col-action {
+  width: 10%;
+}
+
+
+/* =========================
+   Cell
+========================= */
+
+.vpn-table th,
+.vpn-table td {
+  height: 56px;
+  padding: 0 10px;
+
+  box-sizing: border-box;
+  vertical-align: middle;
+  text-align: center;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.vpn-table th {
+  white-space: normal;
+  line-height: 1.3;
+
+  background-color: transparent;
+  color: #BDD9D7;
+
+  border-top: 1px solid #34404b;
+  border-bottom: 1px solid #34404b;
+
+  font-weight: 600;
+}
+
+.vpn-table td {
+  white-space: nowrap;
+  color: #BDD9D7;
+  border-bottom: 1px solid #34404b;
+}
+
+.vpn-table th:first-child,
+.vpn-table td:first-child {
+  text-align: left;
+  padding-left: 18px;
+}
+
+.vpn-table tbody tr:hover {
+  background-color: rgba(255, 255, 255, 0.025);
+}
+
+
+/* =========================
+   VPN Status
+========================= */
+
+.vpn-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+} 
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  flex-shrink: 0;
+  border-radius: 50%;
+}
+
+.vpn-status.connected {
+  color: #6FBF9A;
+}
+
+.vpn-status.connected .status-dot {
+  background-color: #6FBF9A;
+}
+
+.vpn-status.disconnected {
+  color: #D97878;
+}
+
+.vpn-status.disconnected .status-dot {
+  background-color: #D97878;
+}
+
+.vpn-status.error {
+  color: #D6A85F;
+}
+
+.vpn-status.error .status-dot {
+  background-color: #D6A85F;
+}
+
+.vpn-status:not(.connected):not(.disconnected):not(.error) {
+  color: #94a3b8;
+}
+
+.vpn-status:not(.connected):not(.disconnected):not(.error) .status-dot {
+  background-color: #94a3b8;
+}
+
+
+/* =========================
+   Error
+========================= */
+
+.vpn-error {
+  color: #D97878 !important;
+}
+
+
+/* =========================
+   Auto Recovery
+========================= */
+
+.recovery-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+}
+
+.recovery-dot {
+  width: 7px;
+  height: 7px;
+  flex-shrink: 0;
+  border-radius: 50%;
+}
+
+.recovery-status.normal {
+  color: #6FBF9A;
+}
+
+.recovery-status.normal .recovery-dot {
+  background-color: #6FBF9A;
+}
+
+.recovery-status.recovering {
+  color: #D6A85F;
+}
+
+.recovery-status.recovering .recovery-dot {
+  background-color: #D6A85F;
+}
+
+.recovery-status.failed {
+  color: #D97878;
+}
+
+.recovery-status.failed .recovery-dot {
+  background-color: #D97878;
+}
+
+.recovery-status.unknown {
+  color: #94a3b8;
+}
+
+.recovery-status.unknown .recovery-dot {
+  background-color: #94a3b8;
+}
+
+
+/* =========================
+   Action
+========================= */
+
+.action-empty {
+  color: #94a3b8;
+}
+
+.vpn-recovery-button {
+  min-width: 76px;
+  padding: 7px 10px;
+
+  border-radius: 5px;
+  font-size: 12px;
+
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.vpn-recovery-button.recovering {
+  color: #94a3b8;
+  background-color: transparent;
+
+  border: 1px solid #4b5563;
+
+  cursor: default;
+  opacity: 0.75;
+}
+
+.vpn-recovery-button.request {
+  color: #D6A85F;
+  background-color: transparent;
+
+  border: 1px solid #a16207;
+
+  cursor: pointer;
+}
+
+.vpn-recovery-button.request:hover {
+  color: #fde68a;
+  background-color: #332b16;
+  border-color: #ca8a04;
+}
+
+.vpn-recovery-button.request:active {
+  background-color: #463815;
+}

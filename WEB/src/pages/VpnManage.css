@@ -1,0 +1,173 @@
+.vpn-page {
+  padding: 20px 30px 40px;
+
+  box-sizing: border-box;
+}
+
+/* =========================
+   테이블 영역
+========================= */
+
+.vpn-table {
+  width: max-content;
+  min-width: 100%;
+
+  border-collapse: collapse;
+  table-layout: auto;
+
+  font-size: 12px;
+}
+
+.vpn-table-section {
+  margin-top: 15px;
+
+  background-color: #25272C;
+
+  border: 1px solid #34404b;
+  border-radius: 8px;
+}
+
+
+/* 검색 */
+
+.vpn-toolbar {
+  display: flex;
+  align-items: center;
+
+  gap: 12px;
+
+  padding: 15px;
+}
+
+.vpn-toolbar input {
+  width: 300px;
+}
+
+.vpn-toolbar input,
+.vpn-toolbar select {
+  height: 38px;
+
+  padding: 0 12px;
+
+  box-sizing: border-box;
+
+  background-color: rgba(255, 255, 255, 0.025);
+  color: #BDD9D7;
+
+  border: 1px solid #34404b;
+  border-radius: 5px;
+
+  outline: none;
+}
+
+.filter-reset-button {
+  height: 38px;
+
+  padding: 0 14px;
+
+  background-color: transparent;
+  color: #BDD9D7;
+
+  border: 1px solid #34404b;
+  border-radius: 5px;
+
+  cursor: pointer;
+}
+
+.filter-reset-button:hover {
+  background-color: #34404b;
+}
+
+/* =========================
+   Client Peer VPN
+========================= */
+
+.peer-vpn-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  margin-bottom: 15px;
+  padding: 16px 20px;
+
+  background-color: #25272C;
+
+  border: 1px solid #34404b;
+  border-radius: 8px;
+}
+
+
+/* 왼쪽 정보 */
+
+.peer-vpn-info {
+  display: flex;
+  flex-direction: column;
+
+  gap: 7px;
+}
+
+.peer-vpn-title {
+  color: #BDD9D7;
+
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.peer-vpn-message {
+  font-size: 13px;
+}
+
+
+/* 연결 안 됨 */
+
+.peer-vpn-box.disconnected .peer-vpn-message {
+  color: #D97878;
+}
+
+
+/* 연결 중 */
+
+.peer-vpn-box.connecting .peer-vpn-message {
+  color: #D6A85F;
+}
+
+
+/* 연결 완료 */
+
+.peer-vpn-box.connected .peer-vpn-message {
+  color: #6FBF9A;
+}
+
+
+/* 연결 오류 */
+
+.peer-vpn-box.error .peer-vpn-message {
+  color: #D97878;
+}
+
+
+/* =========================
+   연결 중 Spinner
+========================= */
+
+.peer-connect-spinner {
+  width: 14px;
+  height: 14px;
+
+  border: 2px solid rgba(251, 146, 60, 0.3);
+  border-top-color: #D6A85F;
+
+  border-radius: 50%;
+
+  animation: peer-spin 0.7s linear infinite;
+}
+
+@keyframes peer-spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}

@@ -1,0 +1,230 @@
+.register-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background-color: rgba(0, 0, 0, 0.55);
+}
+
+.register-modal {
+  width: 480px;
+
+  padding: 26px;
+
+  border: 1px solid #34404b;
+  border-radius: 10px;
+
+  background-color: #25272C;
+  color: #BDD9D7;
+
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+}
+
+.register-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  margin-bottom: 25px;
+}
+
+.register-modal-header h2 {
+  margin: 0 0 6px;
+
+  font-size: 22px;
+}
+
+.register-modal-header p {
+  margin: 0;
+
+  color: #9eabb6;
+  font-size: 13px;
+}
+
+.modal-close-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 5px;
+
+  border: none;
+  background: transparent;
+
+  color: #BDD9D7;
+  font-size: 22px;
+  cursor: pointer;
+}
+
+.register-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.register-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  margin-bottom: 25px;
+}
+
+.register-field label {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.register-field label:first-of-type {
+  margin-top: 15px;
+}
+
+.register-field label:last-of-type {
+  margin-bottom: 0;
+}
+
+.register-field input {
+  height: 42px;
+
+  padding: 0 12px;
+
+  border: 1px solid #34404b;
+  border-radius: 6px;
+  outline: none;
+
+  box-sizing: border-box;
+
+  background-color: #25272C;
+  color: #BDD9D7;
+
+  font-size: 14px;
+}
+
+.register-field input:focus {
+  border-color: #BDD9D7;
+}
+
+.register-field input::placeholder {
+  color: #687784;
+}
+
+.register-divider {
+  display: none;
+}
+
+.register-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+
+  margin-top: 10px;
+}
+
+.cancel-register-button,
+.confirm-register-button {
+  padding: 9px 18px;
+
+  border-radius: 6px;
+
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.cancel-register-button {
+  border: 1px solid #34404b;
+
+  background-color: transparent;
+  color: #BDD9D7;
+}
+
+.cancel-register-button:hover {
+  background-color: rgba(255, 255, 255, 0.025);
+}
+
+.confirm-register-button {
+  border: none;
+
+  background-color: #BDD9D7;
+  color: #25272C;
+  font-weight: 400;
+}
+
+.confirm-register-button:hover {
+  background-color: #9FC5C4;
+}
+
+.required-mark {
+  margin-left: 4px;
+  color: #D97878;
+  font-weight: 700;
+}
+
+.register-field input.input-error {
+  border-color: #D97878;
+}
+
+.register-error-message {
+  margin: -4px 0 0;
+
+  color: #D97878;
+  font-size: 13px;
+}
+
+.field-error-message {
+  margin: 5px 0 0;
+
+  color: #D97878;
+  font-size: 12px;
+}
+
+.register-field input.input-error {
+  border-color: #D97878;
+}
+
+.camera-name-input-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.camera-name-input-wrapper input {
+  width: 100%;
+
+  /* 글자 수 표시와 겹치지 않도록 */
+  padding-right: 55px;
+
+  box-sizing: border-box;
+}
+
+.input-character-count {
+  position: absolute;
+
+  right: 10px;
+  bottom: 7px;
+
+  color: #89939d;
+  font-size: 11px;
+
+  pointer-events: none;
+}
+
+.camera-location-input-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.camera-location-input-wrapper input {
+  width: 100%;
+
+  /* 글자 수 표시와 겹치지 않도록 */
+  padding-right: 55px;
+
+  box-sizing: border-box;
+}
+
+.input-character-count.limit {
+  color: #D97878;
+}

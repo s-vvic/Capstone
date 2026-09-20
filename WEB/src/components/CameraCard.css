@@ -1,0 +1,52 @@
+
+.camera-card {
+    border-radius: 5px;
+    border: 2px solid rgba(255, 255, 255, 0.025);
+    color: #BDD9D7;
+    padding: 10px;
+    box-sizing: border-box;
+    background-color: #282c34;
+    overflow: visible;
+}
+
+.camera-video {
+    width: 100%;
+    aspect-ratio: 16/9;
+    background-color: black;
+    border-radius: 5px;
+    justify-content: center;
+    align-items: center;
+    display: flex;
+    cursor: pointer;
+}
+
+.camera-name-group {
+    display: column;
+    gap: none;
+    padding-left: 6px;
+    margin-top: 0px;
+}
+
+.name {
+    font-size: 13px;
+    color: #BDD9D7;
+}
+
+.camera-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 10px;
+}
+
+.status {
+    font-size: 10px;
+    transform: translateY(-4);
+    transform: translateX(4);
+}
+.status.online {
+    color:#6FBF9A;
+}
+.status.offline {
+    color: #D97878;
+}

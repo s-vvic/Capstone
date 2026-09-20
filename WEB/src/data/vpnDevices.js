@@ -1,0 +1,72 @@
+export const initialVpnDevices = [
+  {
+    id: 1,
+    name: "현관 카메라",
+    serial: "CAM-0001",
+    vpnStatus: "connected",
+    duration: "2일 14시간 32분",
+    server: "vpn.securecam.com",
+    vpnIp: "10.0.0.101",
+    lastHandshake: "2026-08-10 13:32",
+    error: null,
+    autoConnect: true,
+    startAutoConnect: true,
+    reconnectOnNetworkChange: true
+  },
+  {
+    id: 2,
+    name: "주차장 입구",
+    serial: "CAM-0002",
+    vpnStatus: "connected",
+    duration: "1일 8시간 15분",
+    server: "vpn.securecam.com",
+    vpnIp: "10.0.0.102",
+    lastHandshake: "2026-08-10 13:31",
+    error: null,
+    autoConnect: true,
+    startAutoConnect: true,
+    reconnectOnNetworkChange: true
+  },
+  {
+    id: 3,
+    name: "거실 카메라",
+    serial: "CAM-0003",
+    vpnStatus: "disconnected",
+    duration: "-",
+    server: "vpn.securecam.com",
+    vpnIp: "-",
+    lastHandshake: "-",
+    error: null,
+    autoConnect: true,
+    startAutoConnect: false,
+    reconnectOnNetworkChange: true
+  },
+  {
+    id: 4,
+    name: "부엌 카메라",
+    serial: "CAM-0004",
+    vpnStatus: "error",
+    duration: "-",
+    server: "vpn.securecam.com",
+    vpnIp: "-",
+    lastHandshake: "2026-08-10 12:41",
+    error: "Handshake Timeout",
+    autoConnect: true,
+    startAutoConnect: true,
+    reconnectOnNetworkChange: false
+  },
+  {
+    id: 5,
+    name: "복도 카메라",
+    serial: "CAM-0005",
+    vpnStatus: "connected",
+    duration: "6시간 21분",
+    server: "vpn.securecam.com",
+    vpnIp: "10.0.0.105",
+    lastHandshake: "2026-08-10 13:30",
+    error: null,
+    autoConnect: true,
+    startAutoConnect: true,
+    reconnectOnNetworkChange: true
+  }
+];
