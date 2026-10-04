@@ -14,16 +14,17 @@
 | | **SV-F-012** | 보드별 이름, 설치 위치, 그룹 설정 지원 | `src/controllers/deviceController.js`<br>`src/routes/deviceRoutes.js` | **준수 (100%)** |
 | | **SV-F-013** | 보드 Heartbeat 수신 및 상태 갱신 처리 (30초 주기) | `src/services/heartbeatService.js`<br>`src/routes/internalRoutes.js` | **준수 (100%)** |
 | | **SV-F-014** | VPN 연결 상태 모니터링 및 수동 연결/끊기 지원 | `src/services/vpnStatusService.js`<br>`src/routes/vpnRoutes.js` | **준수 (100%)** |
-| **웹캠/VPN 기능**<br>(`FR/WC_F.md`, `VPN_F.md`) | **WC-F-030** | 부팅 시 VPN 자동 연결 및 서버 프로비저닝 수행 | `src/services/heartbeatService.js` (`provisionBySerial`) | **준수 (100%)** |
+| | **SV-F-015** | 보드 MAC 주소 기반 보드별 식별 번호 부여 (`CAM-XXXX`) | `src/utils/tokenGenerator.js`<br>`src/services/deviceService.js` | **준수 (100%)** |
+| **웹캠/VPN 기능**<br>(`FR/WC_F.md`, `VPN_F.md`) | **WC-F-030** | 부팅 시 VPN 자동 연결 및 서버 프로비저닝 수행 | `src/services/heartbeatService.js` (`provisionByMac`) | **준수 (100%)** |
 | | **WC-F-031** | 30초 주기로 서버에 Heartbeat 전송 | `src/routes/internalRoutes.js` (`POST /devices/heartbeat`) | **준수 (100%)** |
 | | **WC-F-033** | PTZ(상하좌우 회전, 줌) 원격 제어 중계 | `src/services/ptzService.js`<br>`src/routes/deviceRoutes.js` | **준수 (100%)** |
 | | **VPN-F-001~007** | WireGuard 기반 VPN 터널 관리 및 IP 풀 자동 할당 | `src/utils/vpnIpAllocator.js` (10.0.0.10~250) | **준수 (100%)** |
-| **인터페이스 규격**<br>(`SPEC/ICD.md`) | **ICD-01 2.2** | 앱·웹 보드 관리 API (`GET /devices`, `POST /devices/register`, `GET /status`, `PATCH`) | `src/routes/deviceRoutes.js` | **준수 (100%)** |
+| **인터페이스 규격**<br>(`SPEC/ICD_v2.md`) | **ICD-01 2.2** | 앱·웹 보드 관리 API (`GET /devices`, `POST /devices/register`, `GET /status`, `PATCH`) | `src/routes/deviceRoutes.js` | **준수 (100%)** |
 | | **ICD-01 2.5** | VPN 관리 API (`GET /vpn/connections`, `POST /connections/:id/action`) | `src/routes/vpnRoutes.js` | **준수 (100%)** |
-| | **ICD-02 3.1** | 보드 프로비저닝 API (`POST /devices/provision-by-serial`) | `src/routes/internalRoutes.js` | **준수 (100%)** |
-| | **ICD-02 3.2** | Heartbeat 전송 API (`POST /devices/heartbeat`, 204 No Content, 403 Forbidden) | `src/routes/internalRoutes.js` | **준수 (100%)** |
+| | **ICD-02 3.1** | 보드 프로비저닝 API (`POST /devices/provision-by-mac`, `provision-by-serial`) | `src/routes/internalRoutes.js` | **준수 (100%)** |
+| | **ICD-02 3.2** | Heartbeat 전송 API (`POST /devices/heartbeat`, `MAC_no`, 204 No Content) | `src/routes/internalRoutes.js` | **준수 (100%)** |
 | | **ICD-03 3.4** | PTZ 제어 명령 수신 API (`POST /devices/:deviceId/ptz`) | `src/routes/deviceRoutes.js` | **준수 (100%)** |
-| | **ICD-08 7.1.2** | PostgreSQL `devices` 테이블 스키마 일치 | `sql/schema.sql` | **준수 (100%)** |
+| | **ICD-08 7.1.2** | PostgreSQL `devices` 테이블 스키마 일치 (`mac_no` 포함) | `sql/schema.sql` | **준수 (100%)** |
 | | **ICD 8.0** | 공통 오류 코드 (400, 401, 403, 404, 409, 500) | `src/constants/errorCodes.js`<br>`src/middleware/errorHandler.js` | **준수 (100%)** |
 | **비기능 요구사항**<br>(`SPEC/NFR/*`) | **NF-F-001** | DB 프레임워크: PostgreSQL 17.X | `src/config/database.js` (`pg.Pool`), `sql/schema.sql` | **준수 (100%)** |
 | | **NF-F-004** | 백엔드 프레임워크: Express.js (Node.js 24.11) | `package.json`, Express 4.x / ESM | **준수 (100%)** |

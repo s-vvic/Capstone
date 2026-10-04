@@ -122,7 +122,7 @@ describe('SV-F-010 & ICD 2.2 보드 등록 및 관리 기능 테스트', () => {
     assert.ok(res.body.message.includes('이미 다른 계정에 등록'));
   });
 
-  test('필수 파라미터(serial_no) 누락 시 400 BAD_REQUEST 오류 반환 (ICD 8.0)', async () => {
+  test('필수 파라미터(serial_no/mac_no) 누락 시 400 BAD_REQUEST 오류 반환 (ICD 8.0)', async () => {
     const res = await request(app)
       .post('/v1/devices/register')
       .set('Authorization', `Bearer ${testToken}`)
@@ -132,5 +132,34 @@ describe('SV-F-010 & ICD 2.2 보드 등록 및 관리 기능 테스트', () => {
 
     assert.equal(res.status, 400);
     assert.equal(res.body.code, 'BAD_REQUEST');
+  });
+
+  test('보드 MAC 주소 기반 고유 식별 번호 부여 성공 (SV-F-015, ICD_v2 2.2.2)', async () => {
+    const res = await request(app)
+      .post('/v1/devices/register')
+      .set('Authorization', `Bearer ${testToken}`)
+      .send({
+        register_type: 'serial',
+        mac_no: 'AA:BB:CC:DD:EE:88',
+        serial_no: 'SN-EE88',
+        name: '정문 카메라',
+        location: '정문 로비',
+      });
+
+    assert.equal(res.status, 201);
+    // SV-F-015: MAC 주소 마지막 4자리를 기반으로 CAM-EE88 부여
+    assert.equal(res.body.device_id, 'CAM-EE88');
+    assert.equal(res.body.mac_no, 'AA:BB:CC:DD:EE:88');
+    assert.equal(res.body.name, '정문 카메라');
+
+    // 목록 조회에서도 MAC_no 필드가 포함되는지 검증 (ICD_v2 2.2.1)
+    const listRes = await request(app)
+      .get('/v1/devices')
+      .set('Authorization', `Bearer ${testToken}`);
+
+    assert.equal(listRes.status, 200);
+    const item = listRes.body.find((d) => d.device_id === 'CAM-EE88');
+    assert.ok(item);
+    assert.equal(item.MAC_no, 'AA:BB:CC:DD:EE:88');
   });
 });

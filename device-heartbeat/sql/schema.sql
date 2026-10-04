@@ -1,8 +1,8 @@
 -- =============================================================================
 -- SecureCam Component 2: Device Registry & Heartbeat Schema (PostgreSQL 17.X)
 -- Spec Reference:
---   - ICD.md 7.1.2 devices
---   - FR/SV_F.md 3.2.2 (SV-F-010 ~ SV-F-014)
+--   - ICD_v2.md 7.1.2 devices
+--   - FR/SV_F.md 3.2.2 (SV-F-010 ~ SV-F-015)
 --   - NFR/NF_F.md NF-F-001 (PostgreSQL 17.X)
 --   - NFR/NF_P.md NF-P-003 (30초 이내 상태 갱신)
 -- =============================================================================
@@ -10,12 +10,13 @@
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
 -- -----------------------------------------------------------------------------
--- 1. devices 테이블 (ICD 7.1.2 및 실시간 상태 필드 확장)
+-- 1. devices 테이블 (ICD_v2 7.1.2 및 실시간 상태 필드 확장)
 -- -----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS devices (
-    device_id VARCHAR(50) PRIMARY KEY,
+    device_id VARCHAR(50) PRIMARY KEY,                  -- SV-F-015: 보드 MAC 주소 기반 식별 번호 (예: CAM-0001, CAM-EE01)
     user_id UUID,                                       -- FK to users (임시 미할당 시 NULL 가능)
-    serial_no VARCHAR(100) NOT NULL UNIQUE,
+    mac_no VARCHAR(100) UNIQUE,                         -- ICD_v2 7.1.2 MAC 주소
+    serial_no VARCHAR(100) UNIQUE,                      -- 보드 시리얼 번호
     register_code VARCHAR(50) UNIQUE,                   -- SV-F-010 등록 코드 (code 방식)
     name VARCHAR(100) NOT NULL,
     location VARCHAR(200) NOT NULL DEFAULT '미지정',
@@ -59,6 +60,7 @@ CREATE TABLE IF NOT EXISTS devices (
 );
 
 CREATE INDEX IF NOT EXISTS idx_devices_user_id ON devices(user_id);
+CREATE INDEX IF NOT EXISTS idx_devices_mac_no ON devices(mac_no);
 CREATE INDEX IF NOT EXISTS idx_devices_serial_no ON devices(serial_no);
 CREATE INDEX IF NOT EXISTS idx_devices_register_code ON devices(register_code);
 CREATE INDEX IF NOT EXISTS idx_devices_provision_token ON devices(provision_token);
@@ -70,7 +72,8 @@ CREATE INDEX IF NOT EXISTS idx_devices_status ON devices(status);
 CREATE TABLE IF NOT EXISTS heartbeat_history (
     log_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     device_id VARCHAR(50) NOT NULL REFERENCES devices(device_id) ON DELETE CASCADE,
-    serial_no VARCHAR(100) NOT NULL,
+    mac_no VARCHAR(100),
+    serial_no VARCHAR(100),
     status VARCHAR(20) NOT NULL,
     rtsp_ok BOOLEAN NOT NULL,
     wg_ok BOOLEAN NOT NULL,

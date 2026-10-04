@@ -9,10 +9,13 @@ export class InMemoryDeviceRepository {
 
   async create(deviceData) {
     const now = new Date().toISOString();
+    const macNo = deviceData.macNo || deviceData.mac_no || deviceData.MAC_no || null;
     const device = {
       device_id: deviceData.deviceId,
       user_id: deviceData.userId || null,
-      serial_no: deviceData.serialNo,
+      mac_no: macNo,
+      MAC_no: macNo,
+      serial_no: deviceData.serialNo || null,
       register_code: deviceData.registerCode || null,
       name: deviceData.name,
       location: deviceData.location || '미지정',
@@ -54,6 +57,17 @@ export class InMemoryDeviceRepository {
   async findById(deviceId) {
     const d = this.devices.get(deviceId);
     return d ? { ...d } : null;
+  }
+
+  async findByMac(macNo) {
+    if (!macNo) return null;
+    const clean = macNo.trim().toUpperCase();
+    for (const d of this.devices.values()) {
+      if (d.mac_no && d.mac_no.trim().toUpperCase() === clean) {
+        return { ...d };
+      }
+    }
+    return null;
   }
 
   async findBySerial(serialNo) {
@@ -182,7 +196,8 @@ export class InMemoryHeartbeatRepository {
     const entry = {
       log_id: `log_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
       device_id: logData.deviceId,
-      serial_no: logData.serialNo,
+      mac_no: logData.macNo || logData.mac_no || logData.MAC_no || null,
+      serial_no: logData.serialNo || null,
       status: logData.status || 'online',
       rtsp_ok: Boolean(logData.rtspOk),
       wg_ok: Boolean(logData.wgOk),

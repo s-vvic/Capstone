@@ -7,11 +7,14 @@ import { env } from '../config/env.js';
 
 export class DeviceService {
   /**
-   * 보드 등록 (SV-F-010, ICD 2.2.2)
+   * 보드 등록 (SV-F-010, SV-F-015, ICD_v2 2.2.2)
    * 지원 방식: QR 코드(qr), 시리얼 번호(serial), 등록 코드(code)
+   * SV-F-015: 보드 MAC 주소 기반 식별 번호 부여
    */
   async registerDevice(userId, {
     register_type,
+    mac_no,
+    MAC_no,
     serial_no,
     register_code,
     name,
@@ -22,14 +25,25 @@ export class DeviceService {
       throw AppError.badRequest("register_type은 'qr', 'serial', 'code' 중 하나여야 합니다.");
     }
 
+    const rawMac = mac_no || MAC_no;
+    const cleanMac = rawMac && typeof rawMac === 'string' ? rawMac.trim() : null;
+
     let device = null;
 
     if (register_type === 'qr' || register_type === 'serial') {
-      if (!serial_no || typeof serial_no !== 'string' || serial_no.trim().length === 0) {
-        throw AppError.badRequest('시리얼 번호(serial_no)가 필요합니다.');
+      if (!serial_no && !cleanMac) {
+        throw AppError.badRequest('시리얼 번호(serial_no) 또는 MAC 주소(mac_no)가 필요합니다.');
       }
-      const cleanSerial = serial_no.trim();
-      device = await deviceRepository.findBySerial(cleanSerial);
+
+      const cleanSerial = serial_no ? String(serial_no).trim() : null;
+
+      // 1. MAC 주소 또는 시리얼 번호로 기존 등록 보드 검색
+      if (cleanMac) {
+        device = await deviceRepository.findByMac(cleanMac);
+      }
+      if (!device && cleanSerial) {
+        device = await deviceRepository.findBySerial(cleanSerial);
+      }
 
       if (device) {
         if (device.user_id && device.user_id !== userId) {
@@ -38,6 +52,7 @@ export class DeviceService {
         // 기존 사전 프로비저닝된 보드에 사용자 매핑 및 설정 업데이트
         const updated = await deviceRepository.update(device.device_id, {
           user_id: userId,
+          mac_no: cleanMac || device.mac_no,
           name: name?.trim() || device.name || `보드 ${device.device_id}`,
           location: location?.trim() || device.location || '미지정',
           group_id: group_id?.trim() || device.group_id,
@@ -48,9 +63,16 @@ export class DeviceService {
         return updated;
       }
 
-      // 서버에 보드 레코드가 아직 없는 경우 새로 생성
-      const count = await deviceRepository.count();
-      const deviceId = tokenGenerator.generateDeviceId(count + 1);
+      // 2. 서버에 보드 레코드가 아직 없는 경우 새로 생성
+      // SV-F-015: 보드 MAC 주소 기반 식별 번호 부여
+      let deviceId;
+      if (cleanMac) {
+        deviceId = tokenGenerator.generateDeviceIdFromMac(cleanMac);
+      } else {
+        const count = await deviceRepository.count();
+        deviceId = tokenGenerator.generateDeviceId(count + 1);
+      }
+
       const usedIps = await deviceRepository.getAllAssignedVpnIps();
       const vpnIp = vpnIpAllocator.allocateNextIp(usedIps);
       const provisionToken = tokenGenerator.generateProvisionToken();
@@ -59,7 +81,8 @@ export class DeviceService {
       const newDevice = await deviceRepository.create({
         deviceId,
         userId,
-        serialNo: cleanSerial,
+        macNo: cleanMac || (cleanSerial ? `MAC-${cleanSerial}` : null),
+        serialNo: cleanSerial || (cleanMac ? `SN-${cleanMac.replace(/[^a-zA-Z0-9]/g, '')}` : null),
         registerCode: regCode,
         name: name?.trim() || `보드 ${deviceId}`,
         location: location?.trim() || '미지정',
@@ -89,6 +112,7 @@ export class DeviceService {
 
       const updated = await deviceRepository.update(device.device_id, {
         user_id: userId,
+        mac_no: cleanMac || device.mac_no,
         name: name?.trim() || device.name,
         location: location?.trim() || device.location,
         group_id: group_id?.trim() || device.group_id,
@@ -102,7 +126,7 @@ export class DeviceService {
   }
 
   /**
-   * 사용자 소유의 등록 보드 목록 조회 (SV-F-011, ICD 2.2.1)
+   * 사용자 소유의 등록 보드 목록 조회 (SV-F-011, ICD_v2 2.2.1)
    */
   async listDevices(userId) {
     const devices = await deviceRepository.findByUserId(userId);
@@ -110,6 +134,8 @@ export class DeviceService {
       device_id: d.device_id,
       name: d.name,
       location: d.location,
+      mac_no: d.mac_no || d.MAC_no || null,
+      MAC_no: d.mac_no || d.MAC_no || null,
       serial_no: d.serial_no,
       model: d.model,
       firmware_version: d.firmware_version,
@@ -123,7 +149,7 @@ export class DeviceService {
   }
 
   /**
-   * 특정 보드의 현재 상세 상태 및 VPN 정보 조회 (SV-F-011, ICD 2.2.3)
+   * 특정 보드의 현재 상세 상태 및 VPN 정보 조회 (SV-F-011, ICD_v2 2.2.3)
    */
   async getDeviceStatus(deviceId, userId) {
     const device = await deviceRepository.findById(deviceId);
@@ -138,6 +164,7 @@ export class DeviceService {
       status: device.status,
       vpn_status: device.vpn_status,
       vpn_ip: device.vpn_ip,
+      mac_no: device.mac_no || device.MAC_no || null,
       last_handshake: device.last_handshake,
       uptime_seconds: device.uptime_seconds,
       storage_total_gb: device.storage_total_gb,
@@ -148,7 +175,7 @@ export class DeviceService {
   }
 
   /**
-   * 보드 정보 수정 (이름, 위치, 설명, 그룹) (SV-F-012, ICD 2.2.4)
+   * 보드 정보 수정 (이름, 위치, 설명, 그룹) (SV-F-012, ICD_v2 2.2.4)
    */
   async updateDevice(deviceId, userId, { name, location, description, group_id }) {
     const device = await deviceRepository.findById(deviceId);

@@ -2,11 +2,31 @@ import crypto from 'crypto';
 
 export const tokenGenerator = {
   /**
-   * 보드 고유 ID 생성 (예: CAM-0001, ICD 2.2.1)
+   * 보드 고유 ID 생성 (SV-F-015, ICD 2.2.1)
+   * 보드 MAC 주소 기반 식별 번호 부여 (예: AA:BB:CC:DD:EE:01 -> CAM-EE01)
+   * macOrIndex가 숫자인 경우 기존 index 패딩 방식(CAM-0001) 지원 (하위 호환)
    */
-  generateDeviceId(index = 1) {
-    const padded = String(index).padStart(4, '0');
+  generateDeviceId(macOrIndex = 1) {
+    if (typeof macOrIndex === 'string' && macOrIndex.trim().length > 0) {
+      return this.generateDeviceIdFromMac(macOrIndex);
+    }
+    const padded = String(macOrIndex).padStart(4, '0');
     return `CAM-${padded}`;
+  },
+
+  /**
+   * 보드 MAC 주소 기반 고유 식별 번호 생성 (SV-F-015)
+   * 예: "AA:BB:CC:DD:EE:01" -> "CAM-EE01"
+   */
+  generateDeviceIdFromMac(macNo) {
+    if (!macNo || typeof macNo !== 'string') {
+      return 'CAM-0001';
+    }
+    const cleanMac = macNo.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+    if (cleanMac.length >= 4) {
+      return `CAM-${cleanMac.slice(-4)}`;
+    }
+    return `CAM-${cleanMac.padStart(4, '0')}`;
   },
 
   /**

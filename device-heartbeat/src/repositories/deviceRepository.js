@@ -11,21 +11,22 @@ export class PostgresDeviceRepository {
   async create(deviceData) {
     const query = `
       INSERT INTO devices (
-        device_id, user_id, serial_no, register_code, name, location,
+        device_id, user_id, mac_no, serial_no, register_code, name, location,
         description, group_id, model, firmware_version, wg_pubkey, vpn_ip,
         provision_token, is_active, status, vpn_status, rtsp_url, rtsp_url_sub,
         thumbnail_url, registered_at, created_at, updated_at
       )
       VALUES (
         $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14,
-        $15, $16, $17, $18, $19, $20, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+        $15, $16, $17, $18, $19, $20, $21, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
       )
       RETURNING *;
     `;
     const res = await this.pool.query(query, [
       deviceData.deviceId,
       deviceData.userId || null,
-      deviceData.serialNo,
+      deviceData.macNo || null,
+      deviceData.serialNo || null,
       deviceData.registerCode || null,
       deviceData.name,
       deviceData.location || '미지정',
@@ -49,6 +50,11 @@ export class PostgresDeviceRepository {
 
   async findById(deviceId) {
     const res = await this.pool.query('SELECT * FROM devices WHERE device_id = $1;', [deviceId]);
+    return res.rows[0] || null;
+  }
+
+  async findByMac(macNo) {
+    const res = await this.pool.query('SELECT * FROM devices WHERE mac_no = $1;', [macNo]);
     return res.rows[0] || null;
   }
 

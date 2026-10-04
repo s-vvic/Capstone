@@ -14,8 +14,8 @@ export const validator = {
       );
     }
 
-    if ((register_type === 'qr' || register_type === 'serial') && !serial_no) {
-      return next(AppError.badRequest('serial_no는 필수 항목입니다.'));
+    if ((register_type === 'qr' || register_type === 'serial') && !serial_no && !req.body.mac_no && !req.body.MAC_no) {
+      return next(AppError.badRequest('serial_no 또는 mac_no는 필수 항목입니다.'));
     }
 
     if (register_type === 'code' && !register_code) {
@@ -26,12 +26,12 @@ export const validator = {
   },
 
   /**
-   * 보드 프로비저닝 본문 검증 (ICD 3.1.1)
+   * 보드 프로비저닝 본문 검증 (ICD_v2 3.1.1)
    */
   validateProvision(req, res, next) {
-    const { serial_no, wg_pubkey } = req.body || {};
-    if (!serial_no) {
-      return next(AppError.badRequest('serial_no는 필수 항목입니다.'));
+    const { serial_no, mac_no, MAC_no, wg_pubkey } = req.body || {};
+    if (!serial_no && !mac_no && !MAC_no) {
+      return next(AppError.badRequest('mac_no 또는 serial_no는 필수 항목입니다.'));
     }
     if (!wg_pubkey) {
       return next(AppError.badRequest('wg_pubkey는 필수 항목입니다.'));
@@ -40,12 +40,12 @@ export const validator = {
   },
 
   /**
-   * Heartbeat 본문 검증 (ICD 3.2.1)
+   * Heartbeat 본문 검증 (ICD_v2 3.2.1)
    */
   validateHeartbeat(req, res, next) {
-    const { serial_no, provision_token, status } = req.body || {};
-    if (!serial_no) {
-      return next(AppError.badRequest('serial_no는 필수 항목입니다.'));
+    const { serial_no, mac_no, MAC_no, provision_token, status } = req.body || {};
+    if (!serial_no && !mac_no && !MAC_no) {
+      return next(AppError.badRequest('MAC_no(또는 serial_no)는 필수 항목입니다.'));
     }
     if (!provision_token) {
       return next(AppError.badRequest('provision_token은 필수 항목입니다.'));
