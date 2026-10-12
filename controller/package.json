@@ -1,0 +1,37 @@
+{
+  "name": "securecam-integrated-controller",
+  "version": "1.0.0",
+  "description": "SecureCam Cloud Server - Master Controller & Coordinator Gateway for Components 1, 2, 3, and 5",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node --env-file=.env src/server.js",
+    "dev": "node --env-file=.env --watch src/server.js",
+    "test": "node --env-file=.env --test tests/*.test.js"
+  },
+  "keywords": [
+    "securecam",
+    "api-gateway",
+    "master-controller",
+    "coordinator",
+    "express",
+    "microservices"
+  ],
+  "author": "(주)스마클 / 캡스톤 디자인",
+  "license": "ISC",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "helmet": "^8.0.0",
+    "jsonwebtoken": "^9.0.2",
+    "pg": "^8.13.1"
+  },
+  "devDependencies": {
+    "supertest": "^7.0.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
