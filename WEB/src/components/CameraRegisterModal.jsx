@@ -30,7 +30,7 @@ function CameraRegisterModal({ onClose, onRegister }) {
       return;
     }
 
-    if (!CAMERA_NAME_PATTERN.text(cameraName.trim())) {
+    if (!CAMERA_NAME_PATTERN.test(cameraName.trim())) {
       setErrorMessage(
         "카메라 이름은 한글, 영문, 숫자, 공백, -, _, (, )만 사용할 수 있습니다."
       );
@@ -143,7 +143,7 @@ function CameraRegisterModal({ onClose, onRegister }) {
                   setCameraName(value);
                   setErrorMessage("");
 
-                  if (!CAMERA_NAME_PATTERN.text(value)) {
+                  if (!CAMERA_NAME_PATTERN.test(value)) {
                     setCameraNameError(
                       "한글, 영문, 숫자, 공백, -, _, (, )만 사용할 수 있습니다."
                     );

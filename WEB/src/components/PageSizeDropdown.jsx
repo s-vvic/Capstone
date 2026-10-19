@@ -60,6 +60,7 @@ function PageSizeDropDown({ value, onChange }) {
                                     ? "page-size-option selected"
                                     : "page-size-option"
                             }
+                            onClick={() => handleSelect(option)}
                         >
                             {option}개씩 보기
                         </button>

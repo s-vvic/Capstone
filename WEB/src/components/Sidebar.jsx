@@ -48,7 +48,7 @@ function Sidebar({ isOpen, onClose }) {
     setIsMonitoringPopoverOpen(false);
     onClose();
 
-    navigate(`/Monitoring/${cameraId}`);
+    navigate(`/monitoring/${cameraId}`);
   };
 
   const handleLogout = () => {

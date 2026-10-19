@@ -40,7 +40,7 @@ function CameraCard({ camera }) {
     <article className="camera-card">
       <div 
         className="camera-video"
-        onClick={() => navigate(`/Monitoring/${camera.id}`)}
+        onClick={() => navigate(`/monitoring/${camera.id}`)}
       >
           Video ...
       </div>
