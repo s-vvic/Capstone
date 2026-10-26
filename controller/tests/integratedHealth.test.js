@@ -10,7 +10,7 @@ describe('통합 컨트롤러 시스템 헬스체크 및 기본 라우팅 테스
     app = createControllerApp();
   });
 
-  it('통합 헬스체크 엔드포인트(GET /health)가 4개 컴포넌트의 가용성을 모두 정상 반환해야 한다', async () => {
+  it('통합 헬스체크 엔드포인트(GET /health)가 5개 컴포넌트의 가용성을 모두 정상 반환해야 한다', async () => {
     const res = await request(app).get('/health').expect(200);
 
     assert.equal(res.body.status, 'UP');
@@ -19,6 +19,7 @@ describe('통합 컨트롤러 시스템 헬스체크 및 기본 라우팅 테스
     assert.equal(res.body.components.component_1_user_auth, 'UP');
     assert.equal(res.body.components.component_2_device_heartbeat, 'UP');
     assert.equal(res.body.components.component_3_event_notification, 'UP');
+    assert.equal(res.body.components.component_4_wireguard_vpn, 'UP');
     assert.equal(res.body.components.component_5_storage_retention, 'UP');
   });
 

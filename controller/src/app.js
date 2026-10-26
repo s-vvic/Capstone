@@ -24,6 +24,7 @@ export function createControllerApp() {
         component_1_user_auth: 'UP',
         component_2_device_heartbeat: 'UP',
         component_3_event_notification: 'UP',
+        component_4_wireguard_vpn: 'UP',
         component_5_storage_retention: 'UP',
       },
       environment: {
