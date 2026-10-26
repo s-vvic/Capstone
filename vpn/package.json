@@ -1,0 +1,36 @@
+{
+  "name": "securecam-vpn-module",
+  "version": "1.0.0",
+  "description": "SecureCam Cloud Server - Component 4: WireGuard VPN Controller & IP Pool Manager (VPN-F-001 ~ VPN-F-007, ICD-01 2.5, ICD-06, NFR)",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "test": "node --test tests/*.test.js"
+  },
+  "keywords": [
+    "securecam",
+    "wireguard",
+    "vpn",
+    "ipam",
+    "tunnel",
+    "express"
+  ],
+  "author": "(주)스마클 / 캡스톤 디자인",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "helmet": "^8.0.0",
+    "jsonwebtoken": "^9.0.2",
+    "pg": "^8.13.1"
+  },
+  "devDependencies": {
+    "supertest": "^7.0.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
