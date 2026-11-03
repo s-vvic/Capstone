@@ -1,4 +1,5 @@
 import { userRepository, sessionRepository, loginAttemptRepository } from '../repositories/index.js';
+import { verificationService } from './verificationService.js';
 import { passwordUtil } from '../utils/password.js';
 import { jwtUtil } from '../utils/jwt.js';
 import { logger } from '../utils/logger.js';
@@ -8,9 +9,9 @@ import { getPlanDetails, isValidPlan, SUBSCRIPTION_PLANS } from '../config/plans
 
 export class AuthService {
   /**
-   * 회원가입 (SV-F-001, ICD 2.1.3)
+   * 회원가입 (SV-F-001, SV-F-007, ICD 2.1.3)
    */
-  async register({ email, password, name, plan = SUBSCRIPTION_PLANS.BASIC }) {
+  async register({ email, password, name, plan = SUBSCRIPTION_PLANS.BASIC, verification_code }) {
     if (!email || typeof email !== 'string') {
       throw AppError.badRequest('유효한 이메일을 입력해주세요.');
     }
@@ -28,10 +29,21 @@ export class AuthService {
       throw AppError.badRequest('이름을 입력해주세요.');
     }
 
+    const normalizedEmail = email.toLowerCase().trim();
+
+    // SV-F-007: 회원가입 시 이메일 인증 코드가 전달된 경우 검증 수행
+    if (verification_code) {
+      await verificationService.consumeVerification({
+        target: normalizedEmail,
+        code: verification_code,
+        type: 'signup',
+      });
+    }
+
     const selectedPlan = isValidPlan(plan) ? plan : SUBSCRIPTION_PLANS.BASIC;
 
     // 이메일 중복 확인 (ICD 409 CONFLICT)
-    const existing = await userRepository.findByEmail(email);
+    const existing = await userRepository.findByEmail(normalizedEmail);
     if (existing) {
       throw AppError.conflict('이미 등록된 이메일 주소입니다.', '다른 이메일을 사용하거나 아이디/비밀번호 찾기를 진행하세요.');
     }
@@ -40,7 +52,7 @@ export class AuthService {
     const passwordHash = await passwordUtil.hash(password);
 
     const user = await userRepository.create({
-      email: email.toLowerCase().trim(),
+      email: normalizedEmail,
       passwordHash,
       name: name.trim(),
       plan: selectedPlan,

@@ -38,6 +38,30 @@ export const ERROR_CODES = {
     defaultMessage: '중복 데이터 (이메일 등)',
     action: '데이터 중복 여부를 확인하세요.',
   },
+  INVALID_VERIFICATION_CODE: {
+    status: 400,
+    code: 'INVALID_VERIFICATION_CODE',
+    defaultMessage: '인증 코드가 유효하지 않거나 만료되었습니다.',
+    action: '인증 코드를 다시 발송받아 입력해주세요.',
+  },
+  USER_NOT_FOUND: {
+    status: 404,
+    code: 'USER_NOT_FOUND',
+    defaultMessage: '등록되지 않은 이메일 계정입니다.',
+    action: '가입된 이메일인지 확인하거나 회원가입을 진행하세요.',
+  },
+  SESSION_NOT_FOUND: {
+    status: 404,
+    code: 'SESSION_NOT_FOUND',
+    defaultMessage: '존재하지 않거나 이미 만료된 세션입니다.',
+    action: '세션 목록을 새로고침하세요.',
+  },
+  INVALID_PASSWORD: {
+    status: 400,
+    code: 'INVALID_PASSWORD',
+    defaultMessage: '비밀번호가 일치하지 않습니다.',
+    action: '비밀번호를 다시 확인해주세요.',
+  },
   TOO_MANY_REQUESTS: {
     status: 429,
     code: 'TOO_MANY_REQUESTS',

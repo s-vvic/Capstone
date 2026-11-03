@@ -18,8 +18,10 @@ export class SessionService {
 
     const formatted = sessions.map((s) => ({
       session_id: s.session_id,
+      client_name: s.device_name || 'Web Browser',
       device_name: s.device_name,
       device_type: s.device_type,
+      ip_address: s.client_ip || '127.0.0.1',
       client_ip: s.client_ip,
       is_current: s.session_id === currentSessionId,
       is_auto_login: s.is_auto_login,
@@ -38,12 +40,12 @@ export class SessionService {
   }
 
   /**
-   * 특정 기기 강제 로그아웃 (SV-F-004)
+   * 특정 기기 강제 로그아웃 (SV-F-004, ICD 2.1.6.2)
    */
   async revokeSession({ userId, targetSessionId, currentSessionId }) {
     const session = await sessionRepository.findById(targetSessionId);
-    if (!session) {
-      throw AppError.notFound('해당 세션을 찾을 수 없습니다.');
+    if (!session || !session.is_active) {
+      throw AppError.sessionNotFound('존재하지 않거나 이미 만료된 세션입니다.');
     }
 
     if (session.user_id !== userId) {

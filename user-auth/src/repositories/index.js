@@ -3,6 +3,10 @@ import { PostgresUserRepository } from './userRepository.js';
 import { PostgresSessionRepository } from './sessionRepository.js';
 import { PostgresLoginAttemptRepository } from './loginAttemptRepository.js';
 import { PostgresPasswordResetRepository } from './passwordResetRepository.js';
+import {
+  PostgresVerificationCodeRepository,
+  InMemoryVerificationCodeRepository,
+} from './verificationCodeRepository.js';
 
 import {
   InMemoryUserRepository,
@@ -15,17 +19,20 @@ let userRepository;
 let sessionRepository;
 let loginAttemptRepository;
 let passwordResetRepository;
+let verificationCodeRepository;
 
 if (env.DB_DRIVER === 'postgres') {
   userRepository = new PostgresUserRepository();
   sessionRepository = new PostgresSessionRepository();
   loginAttemptRepository = new PostgresLoginAttemptRepository();
   passwordResetRepository = new PostgresPasswordResetRepository();
+  verificationCodeRepository = new PostgresVerificationCodeRepository();
 } else {
   userRepository = new InMemoryUserRepository();
   sessionRepository = new InMemorySessionRepository();
   loginAttemptRepository = new InMemoryLoginAttemptRepository();
   passwordResetRepository = new InMemoryPasswordResetRepository();
+  verificationCodeRepository = new InMemoryVerificationCodeRepository();
 }
 
 /**
@@ -36,7 +43,20 @@ export function setInMemoryDriver() {
   sessionRepository = new InMemorySessionRepository();
   loginAttemptRepository = new InMemoryLoginAttemptRepository();
   passwordResetRepository = new InMemoryPasswordResetRepository();
-  return { userRepository, sessionRepository, loginAttemptRepository, passwordResetRepository };
+  verificationCodeRepository = new InMemoryVerificationCodeRepository();
+  return {
+    userRepository,
+    sessionRepository,
+    loginAttemptRepository,
+    passwordResetRepository,
+    verificationCodeRepository,
+  };
 }
 
-export { userRepository, sessionRepository, loginAttemptRepository, passwordResetRepository };
+export {
+  userRepository,
+  sessionRepository,
+  loginAttemptRepository,
+  passwordResetRepository,
+  verificationCodeRepository,
+};

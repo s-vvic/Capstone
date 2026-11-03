@@ -16,7 +16,10 @@ export class AppError extends Error {
 
     this.name = 'AppError';
     this.status = errorDef.status;
+    this.statusCode = errorDef.status;
+    this.httpStatus = errorDef.status;
     this.code = errorDef.code;
+    this.errorCode = errorDef.code;
     this.action = customAction || errorDef.action;
     this.details = details;
 
@@ -29,6 +32,22 @@ export class AppError extends Error {
 
   static invalidCredentials(message, action) {
     return new AppError('INVALID_CREDENTIALS', message, action);
+  }
+
+  static invalidVerificationCode(message, action) {
+    return new AppError('INVALID_VERIFICATION_CODE', message, action);
+  }
+
+  static userNotFound(message, action) {
+    return new AppError('USER_NOT_FOUND', message, action);
+  }
+
+  static sessionNotFound(message, action) {
+    return new AppError('SESSION_NOT_FOUND', message, action);
+  }
+
+  static invalidPassword(message, action) {
+    return new AppError('INVALID_PASSWORD', message, action);
   }
 
   static unauthorized(message, action) {

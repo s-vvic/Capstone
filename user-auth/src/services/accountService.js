@@ -1,5 +1,6 @@
 import crypto from 'crypto';
 import { userRepository, sessionRepository, passwordResetRepository } from '../repositories/index.js';
+import { verificationService } from './verificationService.js';
 import { passwordUtil } from '../utils/password.js';
 import { logger } from '../utils/logger.js';
 import { AppError } from '../errors/AppError.js';
@@ -20,11 +21,21 @@ export class AccountService {
   }
 
   /**
-   * 아이디(이메일) 찾기 (SV-F-002)
+   * 아이디(이메일) 찾기 (SV-F-002, ICD 2.1.4)
    */
-  async findId({ name }) {
+  async findId({ name, phone_number, phone, verification_code }) {
     if (!name || typeof name !== 'string') {
       throw AppError.badRequest('이름을 입력해주세요.');
+    }
+
+    const phoneTarget = phone_number || phone;
+    // ICD 2.1.4: 본인 인증 코드가 제공된 경우 검증
+    if (phoneTarget && verification_code) {
+      await verificationService.consumeVerification({
+        target: phoneTarget,
+        code: verification_code,
+        type: 'find_id',
+      });
     }
 
     const users = await userRepository.findByName(name.trim());
@@ -32,37 +43,47 @@ export class AccountService {
       throw AppError.notFound('일치하는 회원 정보를 찾을 수 없습니다.');
     }
 
+    const primaryUser = users[0];
+    const masked = this.maskEmail(primaryUser.email);
+
     const maskedResults = users.map((u) => ({
       name: u.name,
       masked_email: this.maskEmail(u.email),
       created_at: u.created_at,
     }));
 
+    // ICD 2.1.4 응답 규격: email(마스킹) 반환 및 기존 하위 호환 items/count 지원
     return {
+      email: masked,
+      masked_email: masked,
       count: maskedResults.length,
       items: maskedResults,
     };
   }
 
   /**
-   * 비밀번호 찾기/재설정 요청 (SV-F-002)
-   * 비밀번호 재설정 일회용 보안 토큰 발급
+   * 비밀번호 찾기/재설정 요청 (SV-F-002, SV-F-007, ICD 2.1.5)
+   * 이메일 본인 확인 6자리 인증 코드 및 보안 재설정 토큰 발급
    */
   async requestPasswordReset({ email }) {
     if (!email) {
       throw AppError.badRequest('이메일을 입력해주세요.');
     }
 
-    const user = await userRepository.findByEmail(email.toLowerCase().trim());
+    const normalizedEmail = email.toLowerCase().trim();
+    const user = await userRepository.findByEmail(normalizedEmail);
     if (!user) {
-      // 보안상 계정 존재 여부를 노출하지 않기 위해 동일한 성공 응답 또는 안내
-      logger.info(`[Account] 비밀번호 재설정 요청 실패 (존재하지 않는 이메일): ${email}`);
-      return {
-        message: '등록된 이메일인 경우 비밀번호 재설정 안내가 발송되었습니다.',
-      };
+      logger.warn(`[Account] 비밀번호 재설정 요청 실패 (존재하지 않는 이메일): ${normalizedEmail}`);
+      throw AppError.userNotFound('등록되지 않은 이메일입니다.');
     }
 
-    // 보안 토큰 생성 (1시간 유효)
+    // 1. SV-F-007 & ICD 2.1.5용 6자리 인증 코드 발급
+    const verification = await verificationService.sendVerificationCode({
+      target: normalizedEmail,
+      type: 'password_reset',
+    });
+
+    // 2. 기존 resetToken 호환 생성 (1시간 유효)
     const resetToken = crypto.randomBytes(32).toString('hex');
     const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString();
 
@@ -72,45 +93,64 @@ export class AccountService {
       expiresAt,
     });
 
-    logger.info(`[Account] 비밀번호 재설정 토큰 발급 완료: ${user.email}`);
+    logger.info(`[Account] 비밀번호 재설정 인증 코드 및 토큰 발급 완료: ${user.email} (코드: ${verification.verification_code})`);
 
     return {
-      message: '비밀번호 재설정 링크가 생성되었습니다.',
-      reset_token: resetToken, // 실제 운영에서는 이메일/SMS 전송
+      message: '비밀번호 재설정 링크 및 인증 코드가 전송되었습니다.',
+      verification_code: verification.verification_code,
+      reset_token: resetToken,
       expires_at: expiresAt,
     };
   }
 
   /**
-   * 비밀번호 재설정 실행 (SV-F-002)
+   * 비밀번호 재설정 실행 (SV-F-002, SV-F-007, ICD 2.1.5)
    */
-  async resetPassword({ resetToken, newPassword }) {
-    if (!resetToken) {
-      throw AppError.badRequest('재설정 토큰이 필요합니다.');
-    }
-
+  async resetPassword({ email, verification_code, resetToken, newPassword }) {
     const pwValidation = passwordUtil.validate(newPassword);
     if (!pwValidation.valid) {
       throw AppError.badRequest(pwValidation.message);
     }
 
-    const record = await passwordResetRepository.findByToken(resetToken);
-    if (!record) {
-      throw AppError.badRequest('유효하지 않거나 만료된 비밀번호 재설정 토큰입니다.');
+    let targetUserId = null;
+
+    // 경로 A: ICD 2.1.5 본인 인증 코드 방식 (email + verification_code)
+    if (email && verification_code) {
+      const normalizedEmail = email.toLowerCase().trim();
+      const user = await userRepository.findByEmail(normalizedEmail);
+      if (!user) {
+        throw AppError.userNotFound('등록되지 않은 이메일입니다.');
+      }
+
+      await verificationService.consumeVerification({
+        target: normalizedEmail,
+        code: verification_code,
+        type: 'password_reset',
+      });
+
+      targetUserId = user.user_id;
+    }
+    // 경로 B: 기존 resetToken 방식 (호환성)
+    else if (resetToken) {
+      const record = await passwordResetRepository.findByToken(resetToken);
+      if (!record) {
+        throw AppError.badRequest('유효하지 않거나 만료된 비밀번호 재설정 토큰입니다.');
+      }
+      targetUserId = record.user_id;
+      await passwordResetRepository.markUsed(record.reset_id);
+    } else {
+      throw AppError.badRequest('인증 코드 또는 재설정 토큰이 필요합니다.');
     }
 
     // 비밀번호 해시 생성 및 사용자 갱신
     const passwordHash = await passwordUtil.hash(newPassword);
-    await userRepository.update(record.user_id, { passwordHash });
-
-    // 토큰 사용 완료 처리
-    await passwordResetRepository.markUsed(record.reset_id);
+    await userRepository.update(targetUserId, { passwordHash });
 
     // 보안을 위해 기존 로그인된 모든 기기 세션 강제 종료 (SV-F-004 연계)
-    await sessionRepository.deactivateAllUserSessions(record.user_id);
+    await sessionRepository.deactivateAllUserSessions(targetUserId);
 
     logger.security('PASSWORD_RESET_SUCCESS', {
-      userId: record.user_id,
+      userId: targetUserId,
       reason: '비밀번호 재설정 완료 및 모든 세션 무효화',
     });
 
@@ -188,9 +228,9 @@ export class AccountService {
   }
 
   /**
-   * 회원 탈퇴 (WEB-F-060)
+   * 회원 탈퇴 (SV-F-006, ICD 2.1.7)
    */
-  async deleteAccount({ userId, password }) {
+  async deleteAccount({ userId, password, reason }) {
     const user = await userRepository.findById(userId);
     if (!user) {
       throw AppError.notFound('사용자를 찾을 수 없습니다.');
@@ -198,7 +238,7 @@ export class AccountService {
 
     const isValid = await passwordUtil.compare(password, user.password_hash);
     if (!isValid) {
-      throw AppError.badRequest('비밀번호가 일치하지 않아 탈퇴할 수 없습니다.');
+      throw AppError.invalidPassword('비밀번호가 일치하지 않아 탈퇴할 수 없습니다.');
     }
 
     // 모든 세션 비활성화
@@ -206,9 +246,14 @@ export class AccountService {
     // 계정 삭제
     await userRepository.delete(userId);
 
-    logger.info(`[Account] 회원 탈퇴 처리 완료: ${user.email}`);
+    logger.info(`[Account] 회원 탈퇴 처리 완료: ${user.email} (사유: ${reason || '미기재'})`);
 
-    return { success: true, message: '회원 탈퇴가 완료되었습니다.' };
+    return {
+      success: true,
+      message: '회원 탈퇴가 완료되었습니다.',
+      deleted_user_id: userId,
+      deleted_at: new Date().toISOString(),
+    };
   }
 }
 

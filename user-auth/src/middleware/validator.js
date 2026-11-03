@@ -59,17 +59,28 @@ export const validator = {
   },
 
   /**
-   * 비밀번호 재설정 실행 검증 (SV-F-002)
+   * 비밀번호 재설정 실행 검증 (SV-F-002, SV-F-007, ICD 2.1.5)
    */
   validateResetPassword(req, res, next) {
-    const { reset_token, new_password } = req.body || {};
-    if (!reset_token) {
-      return next(AppError.badRequest('재설정 토큰(reset_token)이 필요합니다.'));
+    const { reset_token, resetToken, verification_code, email, new_password, newPassword } =
+      req.body || {};
+
+    const hasVerificationCode = Boolean(verification_code && email);
+    const hasResetToken = Boolean(reset_token || resetToken);
+
+    if (!hasVerificationCode && !hasResetToken) {
+      return next(
+        AppError.badRequest(
+          '본인 인증 코드(email + verification_code) 또는 재설정 토큰(reset_token)이 필요합니다.'
+        )
+      );
     }
-    if (!new_password) {
+
+    const passwordToValidate = new_password || newPassword;
+    if (!passwordToValidate) {
       return next(AppError.badRequest('새 비밀번호(new_password)를 입력해주세요.'));
     }
-    const pwValidation = passwordUtil.validate(new_password);
+    const pwValidation = passwordUtil.validate(passwordToValidate);
     if (!pwValidation.valid) {
       return next(AppError.badRequest(pwValidation.message));
     }

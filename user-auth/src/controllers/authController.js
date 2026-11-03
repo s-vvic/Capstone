@@ -3,12 +3,18 @@ import { accountService } from '../services/accountService.js';
 
 export const authController = {
   /**
-   * 회원가입 (POST /auth/register, ICD 2.1.3)
+   * 회원가입 (POST /auth/register, ICD 2.1.3, SV-F-001, SV-F-007)
    */
   async register(req, res, next) {
     try {
-      const { email, password, name, plan } = req.body;
-      const result = await authService.register({ email, password, name, plan });
+      const { email, password, name, plan, verification_code } = req.body || {};
+      const result = await authService.register({
+        email,
+        password,
+        name,
+        plan,
+        verification_code,
+      });
       res.status(201).json(result);
     } catch (error) {
       next(error);

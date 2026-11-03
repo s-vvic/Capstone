@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { authController } from '../controllers/authController.js';
 import { accountController } from '../controllers/accountController.js';
+import { verificationController } from '../controllers/verificationController.js';
 import { authenticate } from '../middleware/authMiddleware.js';
 import { loginRateLimiter } from '../middleware/rateLimiter.js';
 import { validator } from '../middleware/validator.js';
@@ -27,10 +28,18 @@ router.post('/refresh', authController.refresh);
 router.get('/me', authenticate, authController.getMe);
 
 // =============================================================================
-// 아이디/비밀번호 찾기 및 계정 관리 API (SV-F-002, WEB-F-060, APP-F-061)
+// 아이디/비밀번호 찾기 및 계정 관리 API (SV-F-002, SV-F-007, WEB-F-060, APP-F-061)
 // =============================================================================
 
-// 아이디 찾기 (POST /auth/find-id, SV-F-002)
+// 본인 인증 코드 발송 (POST /auth/send-verification-code, SV-F-007)
+router.post('/send-verification-code', verificationController.sendCode);
+router.post('/email/send-code', verificationController.sendCode);
+
+// 본인 인증 코드 검증 (POST /auth/verify-code, SV-F-007)
+router.post('/verify-code', verificationController.verifyCode);
+router.post('/email/verify-code', verificationController.verifyCode);
+
+// 아이디 찾기 (POST /auth/find-id, SV-F-002, ICD 2.1.4)
 router.post('/find-id', accountController.findId);
 
 // 비밀번호 찾기/재설정 링크 요청 (POST /auth/forgot-password, SV-F-002)
