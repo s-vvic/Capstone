@@ -1,10 +1,11 @@
 //카메라 32대 보여주는 화면
 import "./Multiview.css";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import CameraCard from "../components/CameraCard";
 import Pagination from "../components/Pagination";
 import { cameras as initialCameras } from "../data/cameras";
+import { cameraApi } from "../api/cameraApi";
 
 function Multiview() {
 
@@ -13,6 +14,44 @@ function Multiview() {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchKeyword, setSearchKeyword] = useState("");
   const [onlineOnly, setOnlineOnly] = useState(false);
+
+  useEffect(() => {
+    let isMounted = true;
+    async function loadCameras() {
+      try {
+        const data = await cameraApi.getCameras();
+        if (isMounted && Array.isArray(data) && data.length > 0) {
+          const transformed = data.map((d, idx) => ({
+            id: d.device_id || d.id || idx + 1,
+            name: d.name || `카메라 ${idx + 1}`,
+            status: d.status || (d.is_online ? "online" : "offline"),
+            ip: d.vpn_ip || d.ip || `10.0.0.${10 + idx}`,
+            favorite: Boolean(d.favorite),
+            hwnum: d.serial_no || d.device_id || `CAM-${String(idx + 1).padStart(4, "0")}`,
+            location: d.location || "기본 위치",
+            boardId: d.board_id || `BRD-${String(idx + 1).padStart(4, "0")}`,
+            serialNumber: d.serial_no || `SMCL-${Date.now()}`,
+            model: d.model || "RV1106",
+            firmwareVersion: d.firmware_version || "v1.2.3",
+            vpnStatus: d.vpn_status || (d.is_online ? "connected" : "disconnected"),
+            vpnConnected: d.vpn_status === "connected" || Boolean(d.vpnConnected || d.is_online),
+            streamStatus: d.stream_status || (d.is_online ? "live" : "offline"),
+            lastConnectedAt: d.last_connected_at || d.updated_at || "2026-08-12 20:51:32",
+            recentEventAt: d.recent_event_at || "2026-08-12 20:42:15",
+            uptime: d.uptime || "3일 12시간",
+            rtspUrl: d.rtsp_stream_url || "",
+          }));
+          setCameras(transformed);
+        }
+      } catch (err) {
+        console.warn("[Multiview] Using fallback cameras data:", err.message);
+      }
+    }
+    loadCameras();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const rowsPerPage = 2;
 
@@ -76,18 +115,7 @@ function Multiview() {
     setCurrentPage(1);
   }
 
-  // const [cameras, setCameras] = useState([]);
 
-  // useEffect(() => {
-  //   async function getCameras() {
-  //     const response = await fetch("/api/cameras");
-  //     const data = await response.json();
-
-  //     setCameras(data);
-  //   }
-
-  //   getCameras();
-  // }, []);
 
   return (
     <div className="multiview">

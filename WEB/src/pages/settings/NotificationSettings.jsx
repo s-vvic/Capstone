@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import "./Settings.css";
 import Toggle from "../../components/Toggle";
+import { eventApi } from "../../api/eventApi";
 
 function NotificationSettings() {
   const [settings, setSettings] = useState({
@@ -12,57 +13,42 @@ function NotificationSettings() {
     importantOnly: true
   });
 
-//   서버 연결 후
-useEffect(() => {
-  async function getSettings() {
-    const response = await fetch(
-      "/api/notification-settings"
-    );
-    const data = await response.json();
-    setSettings(data);
-  }
-  getSettings();
-}, []);
-
-  //서버 연결 후에는 삭제
-function handleToggle(key) {
-  setSettings((prev) => ({
-    ...prev,
-    [key]: !prev[key]
-  }));
-}
-
-/*  저장 버튼 없이 서버에 즉시 반영
-async function handleToggle(key) {
-  const newValue = !settings[key];
-
-  setSettings((prev) => ({
-    ...prev,
-    [key]: newValue
-  }));
-
-  const response = await fetch(
-    `/api/notification-settings/${key}`,
-    {
-      method: "PATCH",
-
-      headers: {
-        "Content-Type": "application/json"
-      },
-
-      body: JSON.stringify({
-        enabled: newValue
-      })
+  useEffect(() => {
+    let isMounted = true;
+    async function getSettings() {
+      try {
+        const data = await eventApi.getNotificationSettings();
+        if (isMounted && data) {
+          setSettings((prev) => ({
+            ...prev,
+            ...data,
+          }));
+        }
+      } catch (err) {
+        console.warn("[NotificationSettings] Using default settings:", err.message);
+      }
     }
-  );
-  if (!response.ok) {
-    console.error("설정 변경 실패");
-    setSettings((prev) => ({
-      ...prev,
-      [key]: !newValue
-    }));
+    getSettings();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  async function handleToggle(key) {
+    const newValue = !settings[key];
+    const updated = {
+      ...settings,
+      [key]: newValue,
+    };
+
+    setSettings(updated);
+
+    try {
+      await eventApi.updateNotificationSettings(updated);
+    } catch (err) {
+      console.warn("[NotificationSettings] Failed to update setting:", err);
+    }
   }
-}  */
 
   return (
     <div className="settings-section">

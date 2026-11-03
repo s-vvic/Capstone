@@ -4,13 +4,14 @@ import { useParams, useNavigate } from "react-router-dom";
 import "./Monitoring.css";
 import { cameras } from "../data/cameras";
 import EditableCameraName from "../components/EditableCameraName";
+import { cameraApi } from "../api/cameraApi";
 
 function Monitoring() {
   const { cameraId } = useParams();
   const navigate = useNavigate();
 
   const originalCamera = cameras.find(
-    (item) => item.id === Number(cameraId)
+    (item) => String(item.id) === String(cameraId)
   );
 
   const [camera, setCamera] = useState(originalCamera || null);
@@ -23,11 +24,40 @@ function Monitoring() {
   const [streamKey, setStreamKey] = useState(0);
 
 
-  // URL에서 다른 카메라로 이동했을 때 정보 갱신
+  // URL에서 다른 카메라로 이동했을 때 정보 갱신 및 백엔드 상태 연동
   useEffect(() => {
     setCamera(originalCamera || null);
     setIsEditingName(false);
-  }, [cameraId]);
+
+    let isMounted = true;
+    async function fetchCameraDetails() {
+      try {
+        const details = await cameraApi.getCameraStatus(cameraId);
+        if (isMounted && details) {
+          setCamera((prev) => ({
+            ...(prev || {}),
+            name: details.name || prev?.name,
+            status: details.is_online ? "online" : (details.status || "offline"),
+            vpnStatus: details.vpn_status || (details.is_online ? "connected" : "disconnected"),
+            ip: details.vpn_ip || prev?.ip,
+            streamStatus: details.stream_status || (details.is_online ? "live" : "offline"),
+            lastConnectedAt: details.last_heartbeat || details.last_connected_at || prev?.lastConnectedAt,
+            rtspUrl: details.rtsp_stream_url || prev?.rtspUrl,
+          }));
+        }
+      } catch (err) {
+        console.warn("[Monitoring] Could not fetch camera status:", err.message);
+      }
+    }
+
+    if (cameraId) {
+      fetchCameraDetails();
+    }
+
+    return () => {
+      isMounted = false;
+    };
+  }, [cameraId, originalCamera]);
 
 
   // 현재 날짜 / 시간
@@ -57,7 +87,7 @@ function Monitoring() {
 
 
   // 이름 수정
-  function handleNameSave(newName) {
+  async function handleNameSave(newName) {
     setCamera((prev) => ({
       ...prev,
       name: newName,
@@ -65,8 +95,11 @@ function Monitoring() {
 
     setIsEditingName(false);
 
-    // 나중에 API
-    // await updateCameraName(camera.id, newName);
+    try {
+      await cameraApi.updateCamera(cameraId, { name: newName });
+    } catch (error) {
+      console.warn("[Monitoring] Failed to update camera name:", error);
+    }
   }
 
 

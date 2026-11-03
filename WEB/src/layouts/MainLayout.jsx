@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import recentNotifications from "../data/recentNotifications.js";
+import { authApi } from "../api/authApi";
 import "./MainLayout.css";
 
 function MainLayout() {
@@ -71,33 +72,20 @@ function MainLayout() {
     return "SECURE CAM";
   };
 
-  function handleLogout() {
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("refreshToken");
-
-    sessionStorage.clear();
-
-    setOpenMenu(null);
-
-    navigate("/login", {
-      replace: true
-    });
-
-    // try {
-    //   await fetch("/api/auth/logout", {
-    //     method: "POST",
-    //     credentials: "include"
-    //   });
-    // } finally {
-    //   localStorage.removeItem("accessToken");
-    //   localStorage.removeItem("refreshToken");
-    //   sessionStorage.clear();
-
-    //   navigate("/login", {
-    //     replace: true
-    //   });
-    // }   백엔드 연결 시 변경
-
+  async function handleLogout() {
+    try {
+      await authApi.logout();
+    } catch (e) {
+      console.warn("Logout error:", e);
+    } finally {
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
+      sessionStorage.clear();
+      setOpenMenu(null);
+      navigate("/login", {
+        replace: true,
+      });
+    }
   }
 
   return (

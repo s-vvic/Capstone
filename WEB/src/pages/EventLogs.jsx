@@ -2,7 +2,8 @@ import "./EventLogs.css";
 import Pagination from "../components/Pagination";
 import PageSizeDropDown from "../components/PageSizeDropdown";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
+import { eventApi } from "../api/eventApi";
 
 import {
   FiSearch,
@@ -32,28 +33,34 @@ function EventLogs() {
 
   const [memo, setMemo] = useState("");
 
-  /*
-  const [events, setEvents] = useState([]);
+  const loadEvents = useCallback(async () => {
+    try {
+      const response = await eventApi.getEvents();
+      const rawEvents = response.events || response.items || (Array.isArray(response) ? response : null);
+      if (Array.isArray(rawEvents) && rawEvents.length > 0) {
+        const transformed = rawEvents.map((evt, idx) => ({
+          id: evt.event_id || evt.id || idx + 1,
+          occurredAt: evt.event_time || evt.created_at || new Date().toISOString(),
+          cameraId: evt.device_id || evt.cameraId || "CAM-01",
+          cameraName: evt.device_name || evt.cameraName || `CAM-${evt.device_id || idx + 1}`,
+          location: evt.location || "설치 위치",
+          type: evt.event_type || evt.type || "motion",
+          status: (evt.is_confirmed ?? evt.status === "confirmed") ? "confirmed" : "unconfirmed",
+          description: evt.description || evt.details?.description || "이벤트가 감지되었습니다.",
+          snapshotUrl: evt.snapshot_url || evt.snapshotUrl || null,
+          videoUrl: evt.video_url || evt.videoUrl || null,
+          memo: evt.memo || "",
+        }));
+        setEvents(transformed);
+      }
+    } catch (err) {
+      console.warn("[EventLogs] Backend events unavailable, using local data:", err.message);
+    }
+  }, []);
 
   useEffect(() => {
-    async function getEvents() {
-      try {
-        const response = await fetch ("/api/events");
-
-        if (!response.ok) {
-          throw new Error("이벤트 조회 실패");
-        }
-        
-        const data = await response.json();
-
-        setEvents(date);
-      } catch (error) {
-        console.error(error);
-      }
-    }
-    getEvents();
-  }, []);
-  */
+    loadEvents();
+  }, [loadEvents]);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -118,7 +125,7 @@ function EventLogs() {
   }
 
 
-  function handleStatusChange(status) {
+  async function handleStatusChange(status) {
     if (!selectedEvent) return;
 
     setEvents((prev) =>
@@ -133,10 +140,18 @@ function EventLogs() {
       ...prev,
       status,
     }));
+
+    try {
+      await eventApi.updateEvent(selectedEvent.id, {
+        is_confirmed: status === "confirmed",
+      });
+    } catch (err) {
+      console.warn("[EventLogs] Failed to update event status on server:", err);
+    }
   }
 
 
-  function handleSaveMemo() {
+  async function handleSaveMemo() {
     if (!selectedEvent) return;
 
     setEvents((prev) =>
@@ -151,6 +166,12 @@ function EventLogs() {
       ...prev,
       memo,
     }));
+
+    try {
+      await eventApi.updateEvent(selectedEvent.id, { memo });
+    } catch (err) {
+      console.warn("[EventLogs] Failed to save memo on server:", err);
+    }
   }
 
 

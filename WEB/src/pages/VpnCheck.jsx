@@ -1,60 +1,68 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FaCheckCircle, FaTimesCircle} from "react-icons/fa";
+import { FaCheckCircle, FaTimesCircle } from "react-icons/fa";
+import { vpnApi } from "../api/vpnApi";
+import { getAuthToken } from "../api/client";
 import "./VpnCheck.css";
 
 function VpnCheck() {
   const navigate = useNavigate();
-
-  const [ status, setStatus ] = useState("checking");
+  const [status, setStatus] = useState("checking");
 
   useEffect(() => {
+    let isMounted = true;
+
     async function checkVpnStatus() {
       try {
-        
-        /*
-        const token = localStorage.getItem("accessToken");
-        
-        const response = await fetch("/api/status", {
-          method: "GET",
-          headrs: {
-          Authorization: `Bearer ${token}`
+        const token = getAuthToken();
+        if (!token) {
+          // 미로그인 상태인 경우 로그인 페이지로 이동
+          if (isMounted) {
+            setStatus("fail");
+            setTimeout(() => navigate("/login", { replace: true }), 1000);
+          }
+          return;
         }
-      });
 
-      const data = await response.json();
+        // 실제 VPN 서버 헬스체크 및 연결 상태 조회 (GET /vpn/status)
+        const serverStatus = await vpnApi.getVpnStatus().catch((err) => {
+          console.warn("[VpnCheck] VPN status check warning:", err.message);
+          return null;
+        });
 
-      const vpnConnected = data.connected;
-      */
+        // 서버 헬스 응답이 'healthy'이거나 최소한 통신이 이루어진 경우 성공으로 판단
+        const isHealthy =
+          serverStatus?.status === "healthy" || Boolean(serverStatus?.server_endpoint);
 
-        const vpnConnected = false;  /* 임시 테스트용 */
-
-        setTimeout(() => {
-          if (vpnConnected) {
-            //success
+        if (isMounted) {
+          if (isHealthy) {
             setStatus("success");
-
             setTimeout(() => {
-              navigate("/dashboard", {replace: true});
+              navigate("/dashboard", { replace: true });
             }, 1200);
           } else {
-            //fail
             setStatus("fail");
             setTimeout(() => {
-              navigate("/vpn-manage", {replace: true});
+              navigate("/vpn-manage", { replace: true });
             }, 1500);
           }
-        }, 1500);
-
+        }
       } catch (error) {
         console.error("VPN 상태 확인 실패:", error);
-        setStatus("fail");
-        setTimeout(() => {
-          navigate("/vpn-manage", {replace: true});
-        }, 1500);
+        if (isMounted) {
+          setStatus("fail");
+          setTimeout(() => {
+            navigate("/vpn-manage", { replace: true });
+          }, 1500);
+        }
       }
     }
+
     checkVpnStatus();
+
+    return () => {
+      isMounted = false;
+    };
   }, [navigate]);
 
   return (
@@ -89,12 +97,9 @@ function VpnCheck() {
             </p>
           </>
         )}
-
-
       </div>
     </main>
   );
 }
 
 export default VpnCheck;
-

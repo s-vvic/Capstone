@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { authApi } from "../../api/authApi";
 
 function SubscriptionSettings() {
   const [subscription, setSubscription] = useState({
@@ -8,7 +9,27 @@ function SubscriptionSettings() {
     autoRenew: true
   });
 
-  // 서버 연결 전 임시 상태 변경
+  useEffect(() => {
+    let isMounted = true;
+    async function loadPlan() {
+      try {
+        const me = await authApi.getMe();
+        if (isMounted && me?.plan) {
+          setSubscription((prev) => ({
+            ...prev,
+            plan: me.plan.toUpperCase(),
+          }));
+        }
+      } catch (err) {
+        // Fallback to local default
+      }
+    }
+    loadPlan();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   function handleAutoRenew() {
     setSubscription((prev) => ({
       ...prev,
