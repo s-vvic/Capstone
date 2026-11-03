@@ -10,7 +10,10 @@ export default defineConfig({
       name: "sync-root-html",
       writeBundle() {
         try {
-          const nestedHtml = resolve(import.meta.dirname, "dist/public/index.html");
+          const nestedHtml = resolve(
+            import.meta.dirname,
+            "dist/public/index.html",
+          );
           const rootHtml = resolve(import.meta.dirname, "dist/index.html");
           if (fs.existsSync(nestedHtml)) {
             fs.copyFileSync(nestedHtml, rootHtml);
