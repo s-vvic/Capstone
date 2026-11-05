@@ -1,4 +1,4 @@
-import { describe, it, beforeEach } from 'node:test';
+﻿import { describe, it, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 import request from 'supertest';
 import { createControllerApp } from '../src/app.js';
@@ -8,13 +8,18 @@ import { InMemoryVpnRepository } from '../../vpn/src/repositories/inMemoryVpnRep
 import { VirtualWireguardDriver } from '../../vpn/src/drivers/virtualWireguardDriver.js';
 import { defaultIpPoolManager } from '../../vpn/src/services/ipPoolManager.js';
 import { VPN_STATUS } from '../../vpn/src/constants/vpnConstants.js';
+import { setInMemoryDriver as resetAuth } from '../../user-auth/src/repositories/index.js';
+import { authService } from '../../user-auth/src/services/authService.js';
 
 describe('마스터 컨트롤러 - 컴포넌트 4 (WireGuard VPN) 통합 연동 테스트 (ICD 2.5, SV-F-014)', () => {
   let app;
   let vpnRepo;
   let vpnDriver;
+  let testToken;
+  let testUserId;
 
-  beforeEach(() => {
+  beforeEach(async () => {
+    resetAuth();
     defaultIpPoolManager.clear();
     vpnRepo = new InMemoryVpnRepository();
     vpnDriver = new VirtualWireguardDriver();
@@ -23,10 +28,14 @@ describe('마스터 컨트롤러 - 컴포넌트 4 (WireGuard VPN) 통합 연동 
     setWireguardDriver(vpnDriver);
 
     app = createControllerApp();
+    const user = await authService.register({ email: 'vpn-controller@example.com', password: 'VpnTest!2026', name: 'VPN owner' });
+    testUserId = user.user_id;
+    testToken = (await authService.login({ email: user.email, password: 'VpnTest!2026' })).access_token;
   });
 
   it('GET /v1/vpn/status - VPN 서버 헬스 및 IP 풀 가용성 통계 확인', async () => {
-    const res = await request(app).get('/v1/vpn/status').expect(200);
+    await request(app).get('/v1/vpn/status').expect(401);
+    const res = await request(app).get('/v1/vpn/status').set('Authorization', `Bearer ${testToken}`).expect(200);
 
     assert.equal(res.body.status, 'healthy');
     assert.ok(res.body.server_endpoint);
@@ -35,12 +44,10 @@ describe('마스터 컨트롤러 - 컴포넌트 4 (WireGuard VPN) 통합 연동 
   });
 
   it('통합 워크플로우: 피어 등록 -> 연결 상태 조회 -> 수동 disconnect/connect -> 복구 요청', async () => {
-    const testUserId = 'test-vpn-user-01';
-
     // 1. 피어 신규 등록 (보드 프로비저닝 또는 앱 등록)
     const regRes = await request(app)
       .post('/v1/vpn/peers/register')
-      .set('x-user-id', testUserId)
+      .set('Authorization', `Bearer ${testToken}`)
       .send({
         peer_id: 'CAM-CTRL-01',
         peer_type: 'device',
@@ -55,7 +62,7 @@ describe('마스터 컨트롤러 - 컴포넌트 4 (WireGuard VPN) 통합 연동 
     // 2. VPN 연결 상태 목록 조회 (ICD 2.5.1)
     const listRes = await request(app)
       .get('/v1/vpn/connections')
-      .set('x-user-id', testUserId)
+      .set('Authorization', `Bearer ${testToken}`)
       .expect(200);
 
     assert.ok(Array.isArray(listRes.body));
@@ -67,7 +74,7 @@ describe('마스터 컨트롤러 - 컴포넌트 4 (WireGuard VPN) 통합 연동 
     // 3. 수동 연결 끊기 (ICD 2.5.2)
     const disconnectRes = await request(app)
       .post('/v1/vpn/connections/CAM-CTRL-01/action')
-      .set('x-user-id', testUserId)
+      .set('Authorization', `Bearer ${testToken}`)
       .send({ action: 'disconnect' })
       .expect(200);
 
@@ -76,7 +83,7 @@ describe('마스터 컨트롤러 - 컴포넌트 4 (WireGuard VPN) 통합 연동 
     // 4. 수동 재연결 (ICD 2.5.2)
     const reconnectRes = await request(app)
       .post('/v1/vpn/connections/CAM-CTRL-01/action')
-      .set('x-user-id', testUserId)
+      .set('Authorization', `Bearer ${testToken}`)
       .send({ action: 'connect' })
       .expect(200);
 
@@ -90,10 +97,11 @@ describe('마스터 컨트롤러 - 컴포넌트 4 (WireGuard VPN) 통합 연동 
 
     const recoverRes = await request(app)
       .post('/v1/vpn/connections/CAM-CTRL-01/recover')
-      .set('x-user-id', testUserId)
+      .set('Authorization', `Bearer ${testToken}`)
       .expect(200);
 
     assert.equal(recoverRes.body.success, true);
     assert.equal(recoverRes.body.vpn_status, VPN_STATUS.CONNECTED);
   });
 });
+

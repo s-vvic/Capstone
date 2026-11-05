@@ -5,6 +5,7 @@ import eventNotificationRoutes from '../../../event-notification/src/routes/inde
 import vpnRoutes from '../../../vpn/src/routes/index.js';
 import { createStorageRouter } from '../../../storage-retention/src/routes/storageRoutes.js';
 import { unifiedAuthenticate } from '../middleware/unifiedAuthMiddleware.js';
+import { authenticate as authenticateUserSession } from '../../../user-auth/src/middleware/authMiddleware.js';
 
 const router = Router();
 
@@ -12,6 +13,8 @@ const router = Router();
 router.use(authRoutes);
 
 // Component 4: WireGuard VPN 컨트롤러 (/vpn)
+// Use C1's active-session verification, including logout/revocation, before C4.
+router.use('/vpn', authenticateUserSession);
 router.use(vpnRoutes);
 
 // Component 2: 보드 등록 및 생존 관리 (/devices, /vpn)
