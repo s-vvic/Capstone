@@ -1,8 +1,8 @@
-import { vpnPeerService } from '../services/vpnPeerService.js';
-import { defaultIpPoolManager } from '../services/ipPoolManager.js';
-import { getWireguardDriver } from '../drivers/index.js';
-import { validator } from '../middleware/validator.js';
-import { config } from '../config/env.js';
+import { vpnPeerService } from "../services/vpnPeerService.js";
+import { defaultIpPoolManager } from "../services/ipPoolManager.js";
+import { getWireguardDriver } from "../drivers/index.js";
+import { validator } from "../middleware/validator.js";
+import { config } from "../config/env.js";
 
 export const vpnPeerController = {
   /**
@@ -44,12 +44,18 @@ export const vpnPeerController = {
     try {
       const { peerId } = req.params;
       const clientPrivateKey = req.query.private_key || null;
-      const configText = await vpnPeerService.getClientConfigText(peerId, clientPrivateKey);
+      const configText = await vpnPeerService.getClientConfigText(
+        peerId,
+        clientPrivateKey,
+      );
 
       // text/plain 형식 또는 JSON으로 반환 가능
-      if (req.headers.accept && req.headers.accept.includes('text/plain')) {
-        res.setHeader('Content-Type', 'text/plain; charset=utf-8');
-        res.setHeader('Content-Disposition', `attachment; filename="wg0-${peerId}.conf"`);
+      if (req.headers.accept && req.headers.accept.includes("text/plain")) {
+        res.setHeader("Content-Type", "text/plain; charset=utf-8");
+        res.setHeader(
+          "Content-Disposition",
+          `attachment; filename="wg0-${peerId}.conf"`,
+        );
         return res.send(configText);
       }
 
@@ -72,8 +78,9 @@ export const vpnPeerController = {
       const poolStats = defaultIpPoolManager.getStats();
 
       res.status(200).json({
-        service: 'SecureCam WireGuard VPN Controller',
-        status: 'healthy',
+        service: "SecureCam WireGuard VPN Controller",
+        status: "healthy",
+        driver_mode: config.wgDriver,
         server_endpoint: config.wgServerEndpoint,
         server_ip: config.wgServerIp,
         server_public_key: config.wgServerPublicKey,

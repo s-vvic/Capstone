@@ -1,76 +1,35 @@
-import "./VpnPeerStatus.css";
-
-function VpnPeerStatus({
-  status,
-  onReconnect
-}) {
-
-  function getStatusMessage() {
-    if (status === "connecting") {
-      return "VPN 연결을 시도하고 있습니다...";
-    }
-
-    if (status === "connected") {
-      return "VPN이 연결되었습니다.";
-    }
-
-    if (status === "error") {
-      return "VPN 연결에 실패했습니다. 다시 시도해주세요.";
-    }
-
-    return "VPN이 연결되어 있지 않습니다.";
-  }
-
-
-  // function getButtonText() {
-  //   if (status === "connecting") {
-  //     return "연결 중...";
-  //   }
-
-  //   if (status === "connected") {
-  //     return "연결 완료";
-  //   }
-
-  //   return "VPN 연결 재시도";
-  // }
-
-
+﻿import "./VpnPeerStatus.css";
+function VpnPeerStatus({ status, onReconnect, disabled, simulated }) {
+  const messages = {
+    connecting: "VPN 서버 응답을 확인하고 있습니다...",
+    connected:
+      "VPN 서버에 접근할 수 있습니다. 클라이언트 터널 상태는 WireGuard 앱에서 확인해주세요.",
+    error:
+      "VPN 서버에 접근하지 못했습니다. WireGuard 앱에서 터널 연결을 확인한 후 다시 확인해주세요.",
+    disconnected: "WireGuard 앱에서 VPN을 연결한 후 서버 상태를 확인해주세요.",
+  };
   return (
     <section className={`peer-vpn-box ${status}`}>
-
       <div className="peer-vpn-info">
-
-        <div className="peer-vpn-title">
-          클라이언트 VPN 연결
-        </div>
-
+        <div className="peer-vpn-title">VPN 서버 연결 확인</div>
         <span className="peer-vpn-message">
-          {getStatusMessage()}
+          {messages[status] || messages.disconnected}
         </span>
-
-      </div>
-
-
-      {/* <button
-        type="button"
-        className="peer-connect-button"
-        onClick={onReconnect}
-        disabled={
-          status === "connecting" ||
-          status === "connected"
-        }
-      >
-
-        {status === "connecting" && (
-          <span className="peer-connect-spinner" />
+        {simulated && (
+          <span className="peer-vpn-message">
+            개발용 가상 VPN 상태입니다. 실제 터널 연결 상태와 다릅니다.
+          </span>
         )}
-
-        {getButtonText()}
-
-      </button> */}
-
+      </div>
+      <button
+        type="button"
+        className="filter-reset-button"
+        onClick={onReconnect}
+        disabled={disabled || status === "connecting"}
+      >
+        상태 다시 확인
+      </button>
     </section>
   );
 }
-
 export default VpnPeerStatus;

@@ -7,6 +7,8 @@
     "dev": "vite",
     "start": "vite",
     "build": "vite build",
+    "test": "node --test tests/vpnIntegration.test.mjs",
+    "test:browser": "node --test tests/vpnBrowser.test.mjs",
     "preview": "vite preview"
   },
   "dependencies": {

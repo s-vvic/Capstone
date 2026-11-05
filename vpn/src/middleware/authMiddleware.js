@@ -1,7 +1,7 @@
-import jwt from 'jsonwebtoken';
-import { config } from '../config/env.js';
-import { AppError } from '../errors/AppError.js';
-import { ERROR_CODES } from '../constants/errorCodes.js';
+import jwt from "jsonwebtoken";
+import { config } from "../config/env.js";
+import { AppError } from "../errors/AppError.js";
+import { ERROR_CODES } from "../constants/errorCodes.js";
 
 /**
  * JWT Bearer 인증 미들웨어
@@ -9,30 +9,44 @@ import { ERROR_CODES } from '../constants/errorCodes.js';
  */
 export function authenticate(req, res, next) {
   // 1. 테스트 / 개발 모드 x-user-id 헤더 지원
-  if (config.nodeEnv !== 'production' && req.headers['x-user-id']) {
+  if (
+    !req.headers.authorization &&
+    config.nodeEnv !== "production" &&
+    req.headers["x-user-id"]
+  ) {
     req.user = {
-      userId: req.headers['x-user-id'],
-      user_id: req.headers['x-user-id'],
-      email: req.headers['x-user-email'] || 'test@securecam.com',
-      role: req.headers['x-user-role'] || 'user',
+      userId: req.headers["x-user-id"],
+      user_id: req.headers["x-user-id"],
+      email: req.headers["x-user-email"] || "test@securecam.com",
+      role: req.headers["x-user-role"] || "user",
     };
     return next();
   }
 
   // 2. Authorization Header 확인
   const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return next(AppError.unauthorized('인증 토큰이 누락되었습니다.', ERROR_CODES.UNAUTHORIZED));
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return next(
+      AppError.unauthorized(
+        "인증 토큰이 누락되었습니다.",
+        ERROR_CODES.UNAUTHORIZED,
+      ),
+    );
   }
 
-  const token = authHeader.split(' ')[1];
+  const token = authHeader.split(" ")[1];
 
   try {
     const decoded = jwt.verify(token, config.jwtSecret);
     const userId = decoded.sub || decoded.userId || decoded.user_id;
 
     if (!userId) {
-      return next(AppError.unauthorized('유효하지 않은 토큰입니다.', ERROR_CODES.INVALID_TOKEN));
+      return next(
+        AppError.unauthorized(
+          "유효하지 않은 토큰입니다.",
+          ERROR_CODES.INVALID_TOKEN,
+        ),
+      );
     }
 
     req.user = {
@@ -41,15 +55,25 @@ export function authenticate(req, res, next) {
       email: decoded.email,
       name: decoded.name,
       plan: decoded.plan,
-      role: decoded.role || 'user',
+      role: decoded.role || "user",
     };
 
     next();
   } catch (error) {
-    if (error.name === 'TokenExpiredError') {
-      return next(AppError.unauthorized('토큰이 만료되었습니다.', ERROR_CODES.EXPIRED_TOKEN));
+    if (error.name === "TokenExpiredError") {
+      return next(
+        AppError.unauthorized(
+          "토큰이 만료되었습니다.",
+          ERROR_CODES.EXPIRED_TOKEN,
+        ),
+      );
     }
-    return next(AppError.unauthorized('유효하지 않은 토큰입니다.', ERROR_CODES.INVALID_TOKEN));
+    return next(
+      AppError.unauthorized(
+        "유효하지 않은 토큰입니다.",
+        ERROR_CODES.INVALID_TOKEN,
+      ),
+    );
   }
 }
 
@@ -57,7 +81,7 @@ export function authenticate(req, res, next) {
  * 선택적 인증 (토큰이 없어도 에러를 내지 않고 req.user만 비움)
  */
 export function optionalAuthenticate(req, res, next) {
-  if (req.headers.authorization || req.headers['x-user-id']) {
+  if (req.headers.authorization || req.headers["x-user-id"]) {
     return authenticate(req, res, next);
   }
   req.user = null;

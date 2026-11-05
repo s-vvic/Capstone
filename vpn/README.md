@@ -111,3 +111,9 @@ npm test --prefix SourceCode/vpn
 # Master Controller 통합 연동 테스트 (총 9개 테스트)
 npm test --prefix SourceCode/controller
 ```
+
+## WEB 연동 (2026-11-05)
+
+프론트엔드 연결 설정과 검증 방법은 `../WEB/README.md`를 참고합니다. 권장 경로는 `WEB → controller /v1/vpn → C4`이며 controller가 C1 활성 세션을 확인합니다. 독립 실행 시에는 WEB의 `VPN_PROXY_TARGET`을 C4 주소로 설정하고 C1과 `JWT_SECRET`을 일치시킵니다. 독립 C4의 JWT 검증은 C1 세션 만료 저장소와 연동되지 않습니다.
+
+카메라 목록은 로그인 사용자 소유의 활성 device peer만 반환하며 phone peer는 제외합니다. 응답의 `mac`은 기존 `mac_no`에서 표시용 정규 형식으로 변환해 제공하고 기존 `device_id` 경로 키는 유지합니다. `/vpn/status`의 `driver_mode`로 개발용 가상 상태와 실제 드라이버를 구분합니다. 프론트엔드는 API 실패를 성공으로 표시하지 않으며, Linux 드라이버의 상태 조회·피어 삭제 실패도 오류로 전달합니다.

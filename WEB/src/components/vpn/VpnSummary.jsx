@@ -6,6 +6,7 @@ function VpnSummary({
   disconnectedDevices,
   errorDevices,
   refreshing,
+  disabled,
   lastUpdated,
   onRefresh
 }) {
@@ -51,6 +52,7 @@ function VpnSummary({
           type="button"
           className="vpn-refresh-button"
           onClick={onRefresh}
+            disabled={disabled}
         >
         <span
           className={`refresh-icon-wrapper ${refreshing ? "spinning" : ""}`}

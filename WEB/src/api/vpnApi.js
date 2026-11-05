@@ -1,71 +1,99 @@
-/**
- * WireGuard VPN 컨트롤러 REST API (Component 4, ICD 2.5, SV-F-014)
- */
-import { apiClient } from "./client.js";
+﻿import { apiClient } from "./client.js";
+
+// A separate VPN deployment may override the shared controller /v1 base.
+const VPN_BASE_URL = (import.meta.env?.VITE_VPN_API_BASE_URL || "").replace(
+  /\/$/,
+  "",
+);
+const endpoint = (path) =>
+  VPN_BASE_URL ? `${VPN_BASE_URL}/vpn${path}` : `/vpn${path}`;
+const optionsWithTimeout = (options = {}) => ({ timeoutMs: 15000, ...options });
+
+export function normalizeConnections(connections) {
+  if (!Array.isArray(connections))
+    throw new Error("VPN 연결 목록 응답 형식이 올바르지 않습니다.");
+  return connections.map((connection) => {
+    // Current C4 uses device_id; canonical MAC responses are also supported.
+    const id = connection.device_id || connection.peer_id || connection.mac;
+    if (
+      !id ||
+      !["connected", "disconnected", "error"].includes(connection.vpn_status)
+    ) {
+      throw new Error("VPN 기기 식별자 또는 연결 상태가 올바르지 않습니다.");
+    }
+    const handshake = connection.last_handshake
+      ? new Date(connection.last_handshake)
+      : null;
+    return {
+      id,
+      name: connection.device_name || connection.name || id,
+      mac:
+        connection.mac ||
+        connection.mac_no?.replaceAll(":", "").toUpperCase() ||
+        "-",
+      vpnStatus: connection.vpn_status,
+      vpnIp: connection.vpn_ip || "-",
+      lastHandshake:
+        handshake && !Number.isNaN(handshake.getTime())
+          ? handshake.toLocaleString()
+          : "-",
+      duration: Number.isFinite(connection.connected_duration_sec)
+        ? `${connection.connected_duration_sec}초`
+        : "-",
+      error: connection.error_type || null,
+    };
+  });
+}
 
 export const vpnApi = {
-  /**
-   * VPN 서버 헬스 상태 및 IP 풀 가용성 통계 조회 (GET /vpn/status)
-   */
-  async getVpnStatus() {
-    return apiClient.get("/vpn/status");
-  },
-
-  /**
-   * 등록 기기의 VPN 연결 상태 목록 전체 조회 (GET /vpn/connections, ICD 2.5.1, SV-F-014)
-   */
-  async getVpnConnections() {
-    return apiClient.get("/vpn/connections");
-  },
-
-  /**
-   * 특정 기기 VPN 연결 상태 단건 조회 (GET /vpn/connections/:deviceId)
-   */
-  async getVpnConnection(deviceId) {
-    return apiClient.get(`/vpn/connections/${encodeURIComponent(deviceId)}`);
-  },
-
-  /**
-   * 특정 기기 VPN 수동 연결 / 끊기 (POST /vpn/connections/:deviceId/action, ICD 2.5.2, SV-F-014)
-   * @param {string} deviceId - 기기 고유 ID (예: CAM-0001)
-   * @param {'connect' | 'disconnect'} action - 실행할 명령
-   */
-  async executeVpnAction(deviceId, action) {
-    return apiClient.post(`/vpn/connections/${encodeURIComponent(deviceId)}/action`, {
-      action,
-    });
-  },
-
-  /**
-   * 오류 상태 기기 VPN 서버 복구 요청 (POST /vpn/connections/:deviceId/recover, ICD 2.5.3)
-   * @param {string} deviceId - 기기 고유 ID
-   */
-  async recoverVpnConnection(deviceId) {
-    return apiClient.post(`/vpn/connections/${encodeURIComponent(deviceId)}/recover`, {});
-  },
-
-  /**
-   * 피어(보드 또는 웹/모바일 클라이언트) 신규 등록 및 프로비저닝 (POST /vpn/peers/register)
-   * @param {Object} peerData - { peer_id, peer_type, name, wg_pubkey, preferred_ip, ... }
-   */
-  async registerVpnPeer(peerData) {
-    return apiClient.post("/vpn/peers/register", peerData);
-  },
-
-  /**
-   * 피어 등록 해제 및 VPN IP 회수 (DELETE /vpn/peers/:peerId)
-   */
-  async unregisterVpnPeer(peerId) {
-    return apiClient.delete(`/vpn/peers/${encodeURIComponent(peerId)}`);
-  },
-
-  /**
-   * WireGuard 클라이언트 설정 파일(wg0.conf) 조회 (GET /vpn/peers/:peerId/config)
-   */
-  async getVpnPeerConfig(peerId, privateKey = null) {
-    const query = privateKey ? `?private_key=${encodeURIComponent(privateKey)}` : "";
-    return apiClient.get(`/vpn/peers/${encodeURIComponent(peerId)}/config${query}`);
-  },
+  getVpnStatus: (options) =>
+    apiClient.get(endpoint("/status"), optionsWithTimeout(options)),
+  getVpnConnections: (options) =>
+    apiClient.get(endpoint("/connections"), optionsWithTimeout(options)),
+  getVpnConnection: (id, options) =>
+    apiClient.get(
+      endpoint(`/connections/${encodeURIComponent(id)}`),
+      optionsWithTimeout(options),
+    ),
+  executeVpnAction: (id, action, options) =>
+    apiClient.post(
+      endpoint(`/connections/${encodeURIComponent(id)}/action`),
+      { action },
+      optionsWithTimeout(options),
+    ),
+  recoverVpnConnection: (id, options) =>
+    apiClient.post(
+      endpoint(`/connections/${encodeURIComponent(id)}/recover`),
+      {},
+      optionsWithTimeout(options),
+    ),
+  registerVpnPeer: (peerData, options) =>
+    apiClient.post(
+      endpoint("/peers/register"),
+      peerData,
+      optionsWithTimeout(options),
+    ),
+  unregisterVpnPeer: (id, options) =>
+    apiClient.delete(
+      endpoint(`/peers/${encodeURIComponent(id)}`),
+      {},
+      optionsWithTimeout(options),
+    ),
+  // The management UI never sends private keys to the server.
+  getVpnPeerConfig: (id, options) =>
+    apiClient.get(
+      endpoint(`/peers/${encodeURIComponent(id)}/config`),
+      optionsWithTimeout(options),
+    ),
 };
 
+export async function loadVpnData(options) {
+  const [connections, server] = await Promise.all([
+    vpnApi.getVpnConnections(options),
+    vpnApi.getVpnStatus(options),
+  ]);
+  if (server?.status !== "healthy")
+    throw new Error("VPN 서버가 정상 상태가 아닙니다.");
+  return { devices: normalizeConnections(connections), server };
+}
 export default vpnApi;
