@@ -122,17 +122,23 @@ JWT Bearer만 허용하며 `x-user-id` 우회를 제거했습니다. 기본 검�
 
 ## API 접근·오류 콘솔 로그
 
-단독 C2와 통합 controller 모두 C2 요청을 콘솔에 출력합니다. 코드를 반영한 뒤 실제 요청을 받는 프로세스를 재시작합니다. 포트 3000의 통합 서버를 사용한다면 controller를 재시작해야 합니다.
+단독 C2와 통합 controller 모두 **기본적으로 오류 로그만** 콘솔에 출력합니다. 정상 heartbeat의 접근·응답 로그는 숨기며 4xx·5xx 및 응답 전 연결 종료 로그는 유지합니다. 코드를 반영한 뒤 실제 요청을 받는 프로세스를 재시작합니다. 포트 3000의 통합 서버를 사용한다면 controller를 재시작해야 합니다.
 
-- `[C2][REQUEST]`: 접근 즉시 요청 ID, HTTP 메서드, 경로, TCP 출발지 IP를 출력합니다.
-- `[C2][RESPONSE]`: 응답 완료 시 HTTP 상태와 처리 시간(ms)을 출력합니다.
+```dotenv
+C2_ACCESS_LOG_ENABLED=false
+```
+
+위 환경변수를 생략해도 오류 전용 모드입니다. 접근·응답까지 추적해야 할 때만 `C2_ACCESS_LOG_ENABLED=true`로 바꾸고 프로세스를 재시작합니다. 통합 controller를 사용한다면 controller 프로세스가 읽는 환경 설정에 지정합니다.
+
+- `[C2][REQUEST]`: 접근 로그 활성화 시 요청 ID, HTTP 메서드, 경로, TCP 출발지 IP를 출력합니다.
+- `[C2][RESPONSE]`: 접근 로그 활성화 시 응답 완료 HTTP 상태와 처리 시간(ms)을 출력합니다.
 - `[C2][REJECTED]`: 입력 오류·인증 실패 등 4xx 사유를 출력합니다.
 - `[C2][ERROR]`: 500 등 서버 오류의 원본 메시지, 오류 코드, 스택을 출력합니다. 운영 모드에서도 서버 콘솔에 스택이 남습니다.
 - `[C2][ABORTED]`: 응답 완료 전에 연결이 종료되면 출력합니다.
 
 같은 요청은 동일한 `request_id`를 사용하며 응답 헤더의 `X-Request-Id`에서도 확인할 수 있습니다. 통합 controller와 C2 라우터가 함께 동작해도 중복 출력하지 않습니다. JSON 파싱 전에 접근을 기록하므로 잘못된 JSON 요청도 확인할 수 있습니다. Authorization 헤더·요청 본문 전체·쿼리 문자열은 접근 로그에 포함하지 않습니다.
 
-예시:
+접근 로그를 활성화했을 때의 예시:
 
 ```text
 [INFO] [C2][REQUEST] Incoming request {"request_id":"...","method":"POST","path":"/v1/devices/heartbeat","remote_ip":"10.0.1.11"}
@@ -146,7 +152,7 @@ JWT Bearer만 허용하며 `x-user-id` 우회를 제거했습니다. 기본 검�
 [INFO] [C2][RESPONSE] Request completed {"request_id":"...","method":"POST","path":"/v1/devices/heartbeat","remote_ip":"10.0.1.11","status":500,"duration_ms":4.2}
 ```
 
-접근 로그 자체가 없다면 해당 요청이 이 프로세스까지 도달했는지, 실행 중인 서버 주소·포트와 재시작 여부를 확인합니다. `[REQUEST]`는 있지만 `[RESPONSE]`가 없다면 요청 처리가 아직 완료되지 않은 상태이며, 연결이 먼저 닫히면 `[ABORTED]`가 표시됩니다. 프로세스 관리자로 실행 중이면 해당 프로세스의 stdout·stderr 로그에서 확인합니다.
+오류 전용 모드에서는 정상 요청에 로그가 없는 것이 정상입니다. 접근 로그를 활성화했는데도 로그가 없다면 해당 요청이 이 프로세스까지 도달했는지, 실행 중인 서버 주소·포트와 재시작 여부를 확인합니다. `[REQUEST]`는 있지만 `[RESPONSE]`가 없다면 요청 처리가 아직 완료되지 않은 상태이며, 연결이 먼저 닫히면 `[ABORTED]`가 표시됩니다. 프로세스 관리자로 실행 중이면 해당 프로세스의 stdout·stderr 로그에서 확인합니다.
 
 ## PostgreSQL 인증서 체인 오류 해결
 

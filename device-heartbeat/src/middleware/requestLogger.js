@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { logger } from "../utils/logger.js";
+import { env } from "../config/env.js";
 
 // Shared by the standalone app, exported router and controller. Log each request once.
 const contextKey = Symbol("deviceHeartbeatRequestLog");
@@ -15,16 +16,24 @@ export function deviceRequestLogger(req, res, next) {
   req[contextKey] = { context, errorLogged: false };
   if (!res.headersSent) res.setHeader("X-Request-Id", context.request_id);
   const started = process.hrtime.bigint();
-  logger.info("[C2][REQUEST] Incoming request", context);
+  const accessLogsEnabled = env.C2_ACCESS_LOG_ENABLED;
+  if (accessLogsEnabled) logger.info("[C2][REQUEST] Incoming request", context);
 
   let finished = false;
   res.once("finish", () => {
     finished = true;
-    logger.info("[C2][RESPONSE] Request completed", {
+    const metadata = {
       ...context,
       status: res.statusCode,
       duration_ms: Number((Number(process.hrtime.bigint() - started) / 1e6).toFixed(2)),
-    });
+    };
+    if (accessLogsEnabled) logger.info("[C2][RESPONSE] Request completed", metadata);
+    // Also cover middleware that directly sends an error response without next(error).
+    if (res.statusCode >= 400 && !req[contextKey].errorLogged) {
+      req[contextKey].errorLogged = true;
+      if (res.statusCode >= 500) logger.error("[C2][ERROR] Error response returned", null, metadata);
+      else logger.warn("[C2][REJECTED] Error response returned", metadata);
+    }
   });
   res.once("close", () => {
     if (!finished) logger.warn("[C2][ABORTED] Connection closed before response completed", context);

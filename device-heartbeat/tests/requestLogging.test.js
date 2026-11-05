@@ -1,22 +1,55 @@
 import { test, beforeEach, afterEach, mock } from "node:test";
 import assert from "node:assert/strict";
 import request from "supertest";
-import { reset, seed, heartbeat, mac, token, deviceRepository } from "./helpers.js";
+import { reset, seed, heartbeat, mac, token, deviceRepository, createDeviceHeartbeatApp } from "./helpers.js";
 import { logger } from "../src/utils/logger.js";
 import { createControllerApp } from "../../controller/src/app.js";
 import { env } from "../src/config/env.js";
 
 let app;
 let entries;
+const originalAccessLogs = env.C2_ACCESS_LOG_ENABLED;
 beforeEach(() => {
+  env.C2_ACCESS_LOG_ENABLED = true;
   app = reset();
   entries = [];
   for (const level of ["info", "warn", "error"]) {
     mock.method(logger, level, (...args) => entries.push({ level, args }));
   }
 });
-afterEach(() => mock.restoreAll());
+afterEach(() => { mock.restoreAll(); env.C2_ACCESS_LOG_ENABLED = originalAccessLogs; });
 const matching = (tag) => entries.filter((entry) => entry.args[0].includes(tag));
+
+test("error-only mode silences successful heartbeat access and response logs in both hosts", async () => {
+  env.C2_ACCESS_LOG_ENABLED = false;
+  await seed();
+  for (const target of [app, createControllerApp()]) {
+    entries.length = 0;
+    const response = await request(target).post("/v1/devices/heartbeat").send(heartbeat());
+    assert.equal(response.status, 200);
+    assert.ok(response.headers["x-request-id"]);
+    assert.deepEqual(entries, []);
+  }
+});
+
+test("error-only mode retains a single 4xx/5xx log and original failure details", async () => {
+  env.C2_ACCESS_LOG_ENABLED = false;
+  await seed();
+  for (const target of [app, createControllerApp()]) {
+    entries.length = 0;
+    await request(target).post("/v1/devices/heartbeat").send({});
+    assert.equal(entries.length, 1);
+    assert.equal(matching("[REJECTED]")[0].args[1].status, 400);
+  }
+  const cause = new Error("database failed");
+  mock.method(deviceRepository, "updateHeartbeat", async () => { throw cause; });
+  for (const target of [app, createControllerApp()]) {
+    entries.length = 0;
+    await request(target).post("/v1/devices/heartbeat").send(heartbeat());
+    assert.equal(entries.length, 1);
+    assert.equal(matching("[ERROR]")[0].args[1], cause);
+  }
+});
 
 test("every standalone endpoint logs access and response once with a shared request ID", async () => {
   await seed();
@@ -43,6 +76,18 @@ test("every standalone endpoint logs access and response once with a shared requ
     assert.equal(completed[0].args[1].request_id, response.headers["x-request-id"]);
     assert.equal(completed[0].args[1].status, response.status);
     assert.equal(typeof completed[0].args[1].duration_ms, "number");
+  }
+});
+
+test("direct error responses are logged even without an exception", async () => {
+  env.C2_ACCESS_LOG_ENABLED = false;
+  for (const status of [403, 500]) {
+    entries.length = 0;
+    const target = createDeviceHeartbeatApp({ authenticateClient: (req, res) => res.status(status).json({ message: "Rejected" }) });
+    await request(target).get("/v1/devices");
+    assert.equal(entries.length, 1);
+    const metadata = entries[0].args[status === 500 ? 2 : 1];
+    assert.equal(metadata.status, status);
   }
 });
 
