@@ -1,52 +1,465 @@
+/* =========================
+   멀티뷰 카메라 채널
+========================= */
 
-.camera-card {
-    border-radius: 5px;
-    border: 2px solid rgba(255, 255, 255, 0.025);
-    color: #BDD9D7;
-    padding: 10px;
-    box-sizing: border-box;
-    background-color: #282c34;
-    overflow: visible;
-}
+.cam-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 
-.camera-video {
-    width: 100%;
-    aspect-ratio: 16/9;
-    background-color: black;
-    border-radius: 5px;
-    justify-content: center;
-    align-items: center;
-    display: flex;
-    cursor: pointer;
-}
+  min-width: 0;
+  min-height: 0;
 
-.camera-name-group {
-    display: column;
-    gap: none;
-    padding-left: 6px;
-    margin-top: 0px;
+  padding: 10px;
+  box-sizing: border-box;
+
+  background-color: var(--bg);
+  color: var(--accent);
+
+  box-shadow: var(--raised);
+  border-radius: var(--radius-lg);
+
+  transition: box-shadow 0.25s ease;
 }
 
-.name {
-    font-size: 13px;
-    color: #BDD9D7;
+/* 채널 목록에서 선택했을 때 잠깐 강조 */
+.cam-card.highlighted {
+  box-shadow: var(--raised), 0 0 0 2px var(--accent-ring);
 }
 
-.camera-info {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding-top: 10px;
+
+/* 영상 영역 */
+
+.cam-video {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  overflow: hidden;
+
+  background: radial-gradient(ellipse at center, #1a1d22 0%, #0d0f12 75%);
+  border-radius: var(--radius-sm);
+
+  cursor: pointer;
 }
 
-.status {
-    font-size: 10px;
-    transform: translateY(-4);
-    transform: translateX(4);
+.cam-card.offline .cam-video {
+  background:
+    repeating-linear-gradient(
+      -45deg,
+      rgba(255, 255, 255, 0.015) 0 10px,
+      transparent 10px 20px
+    ),
+    #111317;
+  cursor: default;
 }
-.status.online {
-    color:#6FBF9A;
+
+/* 저해상도 WebRTC 영상 — 카드 비율이 달라도 화면이 잘리지 않게 contain */
+.cam-stream {
+  position: absolute;
+  inset: 0;
+
+  width: 100%;
+  height: 100%;
+
+  object-fit: contain;
+
+  pointer-events: none;
 }
-.status.offline {
-    color: #D97878;
+
+.cam-stream-status {
+  position: absolute;
+
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+
+  padding: 6px 12px;
+
+  background-color: rgba(5, 10, 15, 0.72);
+  border-radius: 6px;
+
+  color: var(--text-muted);
+  font-size: 12px;
+
+  pointer-events: none;
+}
+
+.cam-stream-status.failed {
+  color: var(--danger);
+}
+
+/* 스트림 주소가 없을 때 */
+.cam-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 34px;
+  color: rgba(189, 217, 215, 0.12);
+}
+
+/* 스트림이 없을 때 보여 주는 썸네일 (thumbnail_url이 비어 있으면 기본 이미지) */
+.cam-thumbnail {
+  position: absolute;
+  inset: 0;
+
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+  pointer-events: none;
+}
+
+.cam-thumbnail.offline {
+  filter: grayscale(1);
+  opacity: 0.25;
+}
+
+.cam-no-signal {
+  position: relative;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.cam-no-signal svg {
+  font-size: 26px;
+  color: var(--danger);
+  opacity: 0.8;
+}
+
+.cam-no-signal strong {
+  font-size: 13px;
+  letter-spacing: 1px;
+}
+
+.cam-no-signal small {
+  font-size: 11px;
+  opacity: 0.8;
+}
+
+
+/* 영상 위 표시 */
+
+.cam-overlay-top {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  padding: 8px;
+
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.55), transparent);
+  pointer-events: none;
+}
+
+.cam-overlay-spacer {
+  flex: 1;
+}
+
+.cam-live-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+
+  padding: 2px 7px;
+
+  background-color: rgba(0, 0, 0, 0.55);
+  border-radius: 4px;
+
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+}
+
+.cam-live-badge.online {
+  color: #fff;
+}
+
+.cam-live-badge.offline {
+  color: var(--text-muted);
+}
+
+.cam-live-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.cam-live-badge.online .cam-live-dot {
+  background-color: var(--danger);
+  animation: cam-live-pulse 1.6s ease-in-out infinite;
+}
+
+.cam-live-badge.offline .cam-live-dot {
+  background-color: var(--text-muted);
+}
+
+@keyframes cam-live-pulse {
+  50% {
+    opacity: 0.25;
+  }
+}
+
+.cam-channel,
+.cam-time,
+.stream-quality-badge {
+  padding: 2px 6px;
+
+  background-color: rgba(0, 0, 0, 0.55);
+  color: rgba(255, 255, 255, 0.75);
+
+  border-radius: 4px;
+
+  font-size: 10px;
+  letter-spacing: 0.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* WEB-F-012 저해상도 스트림 표시 */
+.stream-quality-badge {
+  color: var(--text-muted);
+}
+
+/* 마우스를 올리면 실시간 보기 안내 */
+.cam-hover {
+  position: absolute;
+  inset: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  background-color: rgba(0, 0, 0, 0.45);
+  color: #fff;
+
+  font-size: 13px;
+  font-weight: 600;
+
+  opacity: 0;
+  transition: opacity 0.18s ease;
+}
+
+.cam-video:hover .cam-hover,
+.cam-video:focus-visible .cam-hover {
+  opacity: 1;
+}
+
+
+/* 이름 · 위치 · 동작 */
+
+.cam-info {
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+
+  padding: 0 4px;
+}
+
+.cam-name-group {
+  min-width: 0;
+
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.cam-name-group strong {
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.cam-name-group small {
+  min-width: 0;
+
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+
+  color: var(--text-muted);
+  font-size: 11px;
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cam-name-group small svg {
+  flex-shrink: 0;
+}
+
+.cam-actions {
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.cam-vpn {
+  display: flex;
+  padding: 0 4px;
+  font-size: 14px;
+}
+
+.cam-vpn.connected {
+  color: var(--success);
+}
+
+.cam-vpn.disconnected {
+  color: var(--text-muted);
+}
+
+.cam-vpn.error {
+  color: var(--danger);
+}
+
+.cam-icon-button {
+  width: 28px;
+  height: 28px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0;
+
+  background: none;
+  color: var(--text-muted);
+
+  border: none;
+  border-radius: 8px;
+
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.cam-icon-button:hover,
+.cam-icon-button.active {
+  color: var(--accent);
+  box-shadow: var(--raised-sm);
+}
+
+
+/* =========================
+   카메라 정보 팝오버
+========================= */
+
+.cam-popover {
+  width: 250px;
+  z-index: 600;
+
+  padding: 14px;
+  box-sizing: border-box;
+
+  background-color: var(--bg);
+  color: var(--accent);
+
+  box-shadow: var(--raised-lg);
+  border-radius: var(--radius-md);
+}
+
+.cam-popover-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+
+  padding-bottom: 10px;
+  margin-bottom: 8px;
+
+  border-bottom: 1px solid var(--line);
+}
+
+.cam-popover-header strong {
+  font-size: 14px;
+}
+
+.cam-popover-status {
+  font-size: 11px;
+}
+
+.cam-popover-status.online {
+  color: var(--success);
+}
+
+.cam-popover-status.offline {
+  color: var(--danger);
+}
+
+.cam-popover-list {
+  margin: 0 0 12px;
+}
+
+.cam-popover-list div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+
+  padding: 4px 0;
+  font-size: 12px;
+}
+
+.cam-popover-list dt {
+  color: var(--text-muted);
+}
+
+.cam-popover-list dd {
+  margin: 0;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.cam-vpn-text.connected {
+  color: var(--success);
+}
+
+.cam-vpn-text.disconnected {
+  color: var(--text-muted);
+}
+
+.cam-vpn-text.error {
+  color: var(--danger);
+}
+
+.cam-popover-action {
+  width: 100%;
+  height: 32px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+
+  background-color: var(--accent);
+  color: var(--bg);
+
+  border: none;
+  border-radius: var(--radius-sm);
+
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.cam-popover-action:hover {
+  background-color: var(--accent-hover);
 }

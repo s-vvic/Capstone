@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import "./Settings.css";
 import Toggle from "../../components/Toggle";
-import { eventApi } from "../../api/eventApi";
+import { getNotificationSettings } from "../../api/settingsApi";
+// import { getNotificationSettings, updateNotificationSettings } from "../../api/settingsApi";  // 서버 연결 후 저장 호출 주석 해제 시
 
 function NotificationSettings() {
   const [settings, setSettings] = useState({
@@ -13,42 +14,48 @@ function NotificationSettings() {
     importantOnly: true
   });
 
-  useEffect(() => {
-    let isMounted = true;
-    async function getSettings() {
-      try {
-        const data = await eventApi.getNotificationSettings();
-        if (isMounted && data) {
-          setSettings((prev) => ({
-            ...prev,
-            ...data,
-          }));
-        }
-      } catch (err) {
-        console.warn("[NotificationSettings] Using default settings:", err.message);
-      }
-    }
-    getSettings();
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-
-  async function handleToggle(key) {
-    const newValue = !settings[key];
-    const updated = {
-      ...settings,
-      [key]: newValue,
-    };
-
-    setSettings(updated);
-
+//   서버 연결 후
+useEffect(() => {
+  async function loadSettings() {
     try {
-      await eventApi.updateNotificationSettings(updated);
-    } catch (err) {
-      console.warn("[NotificationSettings] Failed to update setting:", err);
+      const data = await getNotificationSettings();
+      // vpn 알림은 명세(2.7)에 없어서 화면 값을 유지한다
+      setSettings((prev) => ({ ...prev, ...data }));
+    } catch (error) {
+      console.error(error);
     }
   }
+  loadSettings();
+}, []);
+
+  //서버 연결 후에는 삭제
+function handleToggle(key) {
+  setSettings((prev) => ({
+    ...prev,
+    [key]: !prev[key]
+  }));
+}
+
+/*  저장 버튼 없이 서버에 즉시 반영
+async function handleToggle(key) {
+  const newValue = !settings[key];
+
+  setSettings((prev) => ({
+    ...prev,
+    [key]: newValue
+  }));
+
+  try {
+    // 2.7.2는 전체 설정을 한 번에 저장한다
+    await updateNotificationSettings({ ...settings, [key]: newValue });
+  } catch (error) {
+    console.error(error);
+    setSettings((prev) => ({
+      ...prev,
+      [key]: !newValue
+    }));
+  }
+}  */
 
   return (
     <div className="settings-section">

@@ -3,10 +3,12 @@ import { useNavigate } from "react-router-dom";
 import { FaCheckCircle, FaTimesCircle } from "react-icons/fa";
 import { loadVpnData } from "../api/vpnApi";
 import { getAuthToken, setAuthToken } from "../api/client";
+import { useVpn } from "../context/VpnContext";
 import "./VpnCheck.css";
 
 function VpnCheck() {
   const navigate = useNavigate();
+  const { setPeerVpnStatus } = useVpn();
   const [status, setStatus] = useState("checking");
   const [message, setMessage] = useState("");
   const requestController = useRef(null);
@@ -25,6 +27,7 @@ function VpnCheck() {
       await loadVpnData({ signal: controller.signal });
       if (controller.signal.aborted) return;
       setStatus("success");
+      setPeerVpnStatus("connected");
       setMessage("VPN 서버에 접근할 수 있습니다. 대시보드로 이동합니다.");
       redirectTimer.current = setTimeout(
         () => navigate("/dashboard", { replace: true }),
@@ -38,11 +41,12 @@ function VpnCheck() {
         return;
       }
       setStatus("fail");
+      setPeerVpnStatus("error");
       setMessage(
         "VPN 서버에 접근하지 못했습니다. WireGuard 앱에서 VPN을 연결한 후 다시 확인해주세요.",
       );
     }
-  }, [navigate]);
+  }, [navigate, setPeerVpnStatus]);
   useEffect(() => {
     check();
     return () => {

@@ -4,6 +4,7 @@ function VpnDeviceTable({
   devices,
   onConnection,
   onRecoveryRequest,
+  onSelect,
   pending,
   disabled,
   emptyMessage,
@@ -35,8 +36,9 @@ function VpnDeviceTable({
             </tr>
           )}
           {devices.map((device) => (
-            <tr key={device.id}>
-              <td title={device.name}>{device.name}</td>
+            <tr key={device.id} className="vpn-row-clickable"
+              onClick={(event) => { if (!event.target.closest("button")) onSelect?.(device); }}>
+              <td title={device.name}><button type="button" className="vpn-device-detail-button" onClick={() => onSelect?.(device)} aria-label={`${device.name} 상세 정보`}>{device.name}</button></td>
               <td title={device.mac !== "-" ? device.mac : device.id}>
                 {device.mac !== "-" ? device.mac : device.id}
               </td>

@@ -3,7 +3,9 @@ import { useNavigate } from "react-router-dom";
 import Pagination from "../components/Pagination";
 import VpnSummary from "../components/vpn/VpnSummary";
 import VpnDeviceTable from "../components/vpn/VpnDeviceTable";
-import VpnPeerStatus from "../components/vpn/VpnPeerStatus";
+import VpnDeviceDetailModal from "../components/vpn/VpnDeviceDetailModal";
+import useFitPagination from "../hooks/useFitPagination";
+import { useVpn } from "../context/VpnContext";
 import { vpnApi, loadVpnData } from "../api/vpnApi";
 import { setAuthToken } from "../api/client";
 import "./VpnManage.css";
@@ -18,6 +20,8 @@ function errorMessage(error) {
 
 function VpnManage() {
   const navigate = useNavigate();
+  const { setPeerVpnStatus } = useVpn();
+  const [selectedId, setSelectedId] = useState(null);
   const [devices, setDevices] = useState([]);
   const [server, setServer] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -29,12 +33,10 @@ function VpnManage() {
   const [lastUpdated, setLastUpdated] = useState(null);
   const [searchKeyword, setSearchKeyword] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [currentPage, setCurrentPage] = useState(1);
   const mounted = useRef(false);
   const fetchController = useRef(null);
   const actionController = useRef(null);
   const mutationBusy = useRef(false);
-  const devicesPerPage = 8;
 
   const handleUnauthorized = useCallback(
     (error) => {
@@ -56,11 +58,12 @@ function VpnManage() {
       if (!mounted.current || controller.signal.aborted) return;
       setDevices(data.devices);
       setServer(data.server);
+      setPeerVpnStatus("connected");
       setLoadError("");
       setLastUpdated(new Date().toLocaleString());
     } catch (error) {
       if (!mounted.current || controller.signal.aborted) return;
-      if (!handleUnauthorized(error)) setLoadError(errorMessage(error));
+      if (!handleUnauthorized(error)) { setLoadError(errorMessage(error)); setPeerVpnStatus("error"); }
     } finally {
       if (fetchController.current === controller) fetchController.current = null;
       if (mounted.current && !controller.signal.aborted) {
@@ -68,7 +71,7 @@ function VpnManage() {
         setRefreshing(false);
       }
     }
-  }, [handleUnauthorized]);
+  }, [handleUnauthorized, setPeerVpnStatus]);
 
   useEffect(() => {
     mounted.current = true;
@@ -134,15 +137,8 @@ function VpnManage() {
       (statusFilter === "all" || device.vpnStatus === statusFilter)
     );
   });
-  const totalPages = Math.max(
-    1,
-    Math.ceil(filteredDevices.length / devicesPerPage),
-  );
-  const page = Math.min(currentPage, totalPages);
-  const currentDevices = filteredDevices.slice(
-    (page - 1) * devicesPerPage,
-    page * devicesPerPage,
-  );
+  const { areaRef: tableAreaRef, pageItems: currentDevices, page, setPage: setCurrentPage, totalPages } = useFitPagination(filteredDevices);
+  const selectedDevice = devices.find((device) => device.id === selectedId);
   const unavailable =
     loading || refreshing || Boolean(pending) || Boolean(loadError);
 
@@ -151,20 +147,6 @@ function VpnManage() {
       className="vpn-page"
       aria-busy={loading || refreshing || Boolean(pending)}
     >
-      <VpnPeerStatus
-        status={
-          loading
-            ? "connecting"
-            : loadError
-              ? "error"
-              : server
-                ? "connected"
-                : "disconnected"
-        }
-        simulated={server?.driver_mode === "virtual"}
-        onReconnect={fetchVpnData}
-        disabled={refreshing || Boolean(pending)}
-      />
       {loadError && (
         <p className="vpn-feedback error" role="alert">
           {loadError}
@@ -183,6 +165,9 @@ function VpnManage() {
       )}
       {loading && <p role="status">VPN 연결 정보를 불러오고 있습니다...</p>}
       <VpnSummary
+        onPeerReconnect={fetchVpnData}
+        simulated={server?.driver_mode === "virtual"}
+        peerStatus={loading ? "connecting" : loadError ? "error" : server ? "connected" : "disconnected"}
         totalDevices={devices.length}
         connectedDevices={
           devices.filter((d) => d.vpnStatus === "connected").length
@@ -233,7 +218,9 @@ function VpnManage() {
             필터 초기화
           </button>
         </div>
+        <div className="vpn-table-area" ref={tableAreaRef}>
         <VpnDeviceTable
+          onSelect={(device) => setSelectedId(device.id)}
           devices={currentDevices}
           pending={pending}
           disabled={unavailable}
@@ -259,6 +246,7 @@ function VpnManage() {
             if (device) performAction(device, "recover");
           }}
         />
+        </div>
         <Pagination
           currentPage={page}
           totalPages={totalPages}
@@ -267,6 +255,8 @@ function VpnManage() {
           itemLabel="대"
         />
       </section>
+      {selectedDevice && <VpnDeviceDetailModal device={selectedDevice} onClose={() => setSelectedId(null)}
+        onRecoveryRequest={unavailable ? undefined : (id) => { const device = devices.find((item) => item.id === id); if (device) performAction(device, "recover"); }} />}
     </main>
   );
 }

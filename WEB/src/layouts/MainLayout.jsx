@@ -1,8 +1,11 @@
 import { useState, useRef, useEffect } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
+import VpnAlertBanner from "../components/vpn/VpnAlertBanner";
+import ApiErrorToast from "../components/ApiErrorToast";
 import recentNotifications from "../data/recentNotifications.js";
-import { authApi } from "../api/authApi";
+import { logout } from "../api/authApi";
+import { clearSession } from "../storage/authStorage";
 import "./MainLayout.css";
 
 function MainLayout() {
@@ -37,7 +40,7 @@ function MainLayout() {
       return "Dashboard";
     }
 
-    if (path.startsWith("/Monitoring")) {
+    if (path.startsWith("/monitoring")) {
       return "실시간 모니터링";
     }
 
@@ -45,7 +48,7 @@ function MainLayout() {
       return "다채널 멀티뷰";
     }
 
-    if (path.startsWith("/subscriptions")) {
+    if (path.startsWith("/subscription")) {
       return "구독 관리";
     }
 
@@ -73,19 +76,25 @@ function MainLayout() {
   };
 
   async function handleLogout() {
-    try {
-      await authApi.logout();
-    } catch (e) {
-      console.warn("Logout error:", e);
-    } finally {
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("refreshToken");
-      sessionStorage.clear();
+    try { await logout(); }
+    catch (error) { console.warn("로그아웃 요청 실패", error); }
+    finally {
+      clearSession();
       setOpenMenu(null);
-      navigate("/login", {
-        replace: true,
-      });
+      navigate("/login", { replace: true });
     }
+
+    // try {
+    //   await logout();
+    // } finally {
+    //   clearSession();
+    //   sessionStorage.clear();
+
+    //   navigate("/login", {
+    //     replace: true
+    //   });
+    // }   백엔드 연결 시 변경
+
   }
 
   return (
@@ -277,7 +286,17 @@ function MainLayout() {
 
         {openMenu === "settings" && (
           <div className="header-dropdown settings-dropdown">
-            <button 
+            <button
+              type="button"
+              onClick={() => {
+                setOpenMenu(null);
+                navigate("/settings/general");
+              }}
+            >
+              일반 설정
+            </button>
+
+            <button
               type="button"
               onClick={() => {
                 setOpenMenu(null);
@@ -287,14 +306,14 @@ function MainLayout() {
               알림 설정
             </button>
 
-            <button 
+            <button
               type="button"
               onClick={() => {
                 setOpenMenu(null);
-                navigate("/settings/general");
+                navigate("/settings/subscription");
               }}
             >
-              일반 설정
+              구독 설정
             </button>
             </div>
         )}
@@ -328,7 +347,7 @@ function MainLayout() {
             </span>
 
             <span className="user-name">
-              admin
+              {localStorage.getItem("userName") || "사용자"}
             </span>
 
             <span
@@ -372,7 +391,16 @@ function MainLayout() {
         onClose={() => setIsSidebarOpen(false)}
       />
 
+      {/* Client VPN 연결 이상 시 재연결 안내 (WEB-F-050) */}
+      <VpnAlertBanner />
+
+      {(location.pathname === "/dashboard" || location.pathname === "/reports" || location.pathname.startsWith("/settings")) &&
+        <p className="demo-data-notice" role="note">화면 미리보기: 이벤트 통계·리포트·추가 설정은 시연 데이터입니다. 설정 화면의 변경은 서버·보드에 적용되지 않습니다.</p>}
+
       <Outlet />
+
+      {/* API 오류 응답의 message 표시 */}
+      <ApiErrorToast />
 
     </div>
   );

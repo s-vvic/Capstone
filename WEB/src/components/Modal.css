@@ -1,0 +1,162 @@
+.app-modal-overlay {
+  position: fixed;
+  inset: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background-color: rgba(0, 0, 0, 0.55);
+
+  z-index: 1000;
+}
+
+.app-modal {
+  max-width: calc(100vw - 40px);
+  max-height: calc(100vh - 40px);
+
+  display: flex;
+  flex-direction: column;
+
+  background-color: var(--bg);
+  color: var(--accent);
+
+  box-shadow: var(--raised-lg);
+  border-radius: var(--radius-lg);
+
+  overflow: hidden;
+}
+
+.app-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 18px 22px;
+
+  border-bottom: 1px solid var(--line);
+}
+
+.app-modal-header h2 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.app-modal-close {
+  width: 32px;
+  height: 32px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background-color: transparent;
+  color: var(--accent);
+
+  border: none;
+  box-shadow: var(--raised-sm);
+  border-radius: var(--radius-sm);
+
+  cursor: pointer;
+}
+
+.app-modal-body {
+  padding: 20px 22px;
+  overflow-y: auto;
+}
+
+.app-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+
+  padding: 14px 22px;
+
+  border-top: 1px solid var(--line);
+}
+
+
+/* 모달 / 신규 화면 공통 버튼 */
+
+.btn {
+  height: 38px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+
+  padding: 0 16px;
+
+  background-color: transparent;
+  color: var(--accent);
+
+  border: none;
+  box-shadow: var(--raised-sm);
+  border-radius: var(--radius-md);
+
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.btn:hover:not(:disabled) {
+  background-color: var(--hover);
+}
+
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.btn.primary {
+  background-color: var(--accent);
+  color: var(--bg);
+  font-weight: 600;
+}
+
+.btn.primary:hover:not(:disabled) {
+  background-color: var(--accent-hover);
+}
+
+.btn.danger {
+  color: var(--danger);
+}
+
+.btn.small {
+  height: 30px;
+  padding: 0 12px;
+  font-size: 12px;
+}
+
+.field-input,
+.field-select {
+  height: 38px;
+
+  padding: 0 12px;
+
+  background-color: var(--hover);
+  color: var(--accent);
+
+  border: none;
+  box-shadow: var(--inset);
+  border-radius: var(--radius-md);
+
+  font-size: 13px;
+  box-sizing: border-box;
+}
+
+.field-select option {
+  background-color: var(--bg);
+}
+
+.demo-tag {
+  display: inline-block;
+
+  padding: 2px 6px;
+
+  border: 1px dashed var(--warning);
+  border-radius: 5px;
+
+  color: var(--warning);
+  font-size: 10px;
+}

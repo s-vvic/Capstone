@@ -13,7 +13,7 @@
   grid-row: 1;
 
   justify-self: start;
-  color: #aeb7c2;
+  color: var(--text-muted);
   font-size: 12px;
 }
 
@@ -32,22 +32,23 @@
   height: 32px;
 
   background-color: transparent;
-  color: #BDD9D7;
+  color: var(--accent);
 
-  border: 1px solid #34404b;
-  border-radius: 5px;
+  border: none;
+  box-shadow: var(--raised-sm);
+  border-radius: var(--radius-md);
 
   cursor: pointer;
 }
 
 .pagination-buttons button:hover:not(:disabled) {
-  background-color: rgba(255, 255, 255, 0.025);
+  background-color: var(--hover);
 }
 
 .pagination-buttons button.active {
-  background-color: #34404b;
+  background-color: transparent;
 
-  border-color: #34404b;
+  box-shadow: var(--inset);
 }
 
 .pagination-buttons button:disabled {

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { cameras } from "../data/cameras";
+import { clearSession } from "../storage/authStorage";
 import "./Sidebar.css";
 
 function Sidebar({ isOpen, onClose }) {
@@ -48,11 +49,11 @@ function Sidebar({ isOpen, onClose }) {
     setIsMonitoringPopoverOpen(false);
     onClose();
 
-    navigate(`/monitoring/${cameraId}`);
+    navigate(`/Monitoring/${cameraId}`);
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("accessToken");
+    clearSession();
 
     setIsMonitoringPopoverOpen(false);
     onClose();
@@ -125,11 +126,11 @@ function Sidebar({ isOpen, onClose }) {
                   ) : (
                     cameras.map((camera) => (
                       <button
-                        key={camera.id}
+                        key={camera.device_id}
                         type="button"
                         className="camera-popover-item"
                         onClick={() =>
-                          handleCameraSelect(camera.id)
+                          handleCameraSelect(camera.device_id)
                         }
                       >
                         <span>{camera.name}</span>

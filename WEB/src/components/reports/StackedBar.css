@@ -1,0 +1,43 @@
+/* 누적 막대 */
+
+.stacked-track {
+  height: 12px;
+
+  display: flex;
+  gap: 2px;
+
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: var(--inset);
+}
+
+.stacked-bar.compact .stacked-track {
+  height: 6px;
+  border-radius: 3px;
+}
+
+.stacked-segment {
+  height: 100%;
+}
+
+.stacked-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+
+  font-size: 12px;
+}
+
+.stacked-legend li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.stacked-legend strong {
+  color: #fff;
+}

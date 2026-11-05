@@ -1,25 +1,151 @@
+/* =========================
+   한 화면 레이아웃
+   기기 관리에서만 레이아웃을 뷰포트 높이로 고정하고
+   화면에 들어가는 행 수만큼 한 페이지에 표시 (넘치면 다음 페이지)
+========================= */
+
+.main-layout:has(> .device-manage) {
+  height: 100vh;
+
+  display: flex;
+  flex-direction: column;
+}
+
+.main-layout:has(> .device-manage) > :not(.device-manage) {
+  flex-shrink: 0;
+}
+
 .device-manage {
+  flex: 1;
+  min-height: 360px;
+
+  display: flex;
+  flex-direction: column;
+
   width: calc(100% - 60px);
   max-width: 1400px;
 
-  margin: 30px auto;
+  margin: 0 auto;
+  padding-bottom: 20px;
+  box-sizing: border-box;
 
-  color: #BDD9D7;
+  color: var(--accent);
 }
 
 .device-manage-top {
+  flex-shrink: 0;
+
   display: flex;
   align-items: center;
   justify-content: space-between;
 
-  margin-bottom: 20px;
+  margin-bottom: 14px;
+}
+
+.device-manage-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  margin: 0;
+  font-size: 20px;
+}
+
+.device-title-icon {
+  width: 32px;
+  height: 32px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  box-shadow: var(--inset);
+  border-radius: var(--radius-sm);
+
+  font-size: 15px;
+}
+
+/* 머리글 아이콘 */
+.th-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.th-label svg {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+/* 카메라 이름 */
+.device-name-cell {
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+
+  text-align: left;
+}
+
+.device-name-cell .name-edit-row {
+  flex: 1;
+  min-width: 0;
+}
+
+.device-name-icon {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  box-shadow: var(--raised-sm);
+  border-radius: 50%;
+
+  font-size: 13px;
+}
+
+.device-name-icon.online {
+  color: var(--accent);
+}
+
+.device-name-icon.offline {
+  color: var(--danger);
+}
+
+.device-location {
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.device-location svg {
+  flex-shrink: 0;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.device-location.unset {
+  color: var(--text-muted);
 }
 
 .device-tabs {
   display: flex;
 
-  border: 1px solid #34404b;
-  border-radius: 6px;
+  border: none;
+  box-shadow: var(--raised-sm);
+  border-radius: var(--radius-md);
 
   overflow: hidden;
 }
@@ -28,10 +154,10 @@
   padding: 10px 18px;
 
   border: none;
-  border-right: 1px solid #34404b;
+  border-right: 1px solid var(--line);
 
   background-color: transparent;
-  color: #aeb8c1;
+  color: var(--text-muted);
 
   cursor: pointer;
 }
@@ -41,8 +167,9 @@
 }
 
 .device-tabs button.active {
-  background-color: #17334a;
-  color: #79baf0;
+  background-color: transparent;
+  box-shadow: var(--inset);
+  color: var(--accent);
 }
 
 .register-camera-button {
@@ -52,24 +179,38 @@
 
   padding: 10px 14px;
 
-  border: 1px solid #62717d;
-  border-radius: 5px;
+  border: none;
+  box-shadow: var(--raised-sm);
+  border-radius: var(--radius-md);
 
   background-color: transparent;
-  color: #BDD9D7;
+  color: var(--accent);
 
   cursor: pointer;
 }
 
 .register-camera-button:hover {
-  background-color: rgba(255, 255, 255, 0.025);
+  background-color: var(--hover);
+}
+
+/* 남는 높이를 채우는 영역 — 이 높이에 들어가는 만큼만 한 페이지에 표시 (useFitPagination) */
+.device-table-area {
+  flex: 1;
+  min-height: 0;
 }
 
 .device-table-wrapper {
-  border: 1px solid #34404b;
-  border-radius: 7px;
+  /* 화면이 좁아 정보 열 폭 합보다 작아지면 표 안에서 가로 스크롤 */
+  overflow-x: auto;
+  overflow-y: hidden;
 
-  overflow: hidden;
+  border: none;
+  box-shadow: var(--raised);
+  border-radius: var(--radius-lg);
+}
+
+.device-manage .pagination-container {
+  flex-shrink: 0;
 }
 
 .device-table {
@@ -80,65 +221,133 @@
 }
 
 .device-table th {
-  padding: 16px 15px;
+  padding: 14px 15px;
 
   text-align: center;
   vertical-align: middle;
 
-  border-bottom: 1px solid #36434e;
+  border-bottom: 1px solid var(--line);
 
-  background-color: rgba(255, 255, 255, 0.025);
+  background: linear-gradient(var(--hover), var(--hover)), var(--bg);
 
-  color: #BDD9D7;
+  color: var(--accent);
   font-size: 13px;
 }
 
 .device-table td {
-  height: 58px;
+  height: 52px;
   padding: 0 15px;
 
   text-align: center;
   vertical-align: middle;
 
-  border-bottom: 1px solid #34404b;
+  border-bottom: 1px solid var(--line);
 
   font-size: 14px;
 }
 
 .device-table tbody tr:last-child td {
   border-bottom: none;
-  color: #BDD9D7;
+  color: var(--accent);
 }
 
 .device-table tbody tr:hover {
-  background-color: rgba(255, 255, 255, 0.025);
+  background-color: var(--hover);
 }
 
-.device-table th:nth-child(1) {
-  width: 24%;
+/* 정보 열은 고정 폭, 남는 폭은 양 끝 빈 열(col-edge)이 반씩 나눠 가진다
+   → 넓은 화면에서도 정보가 가운데에 모여 열 사이 간격이 벌어지지 않음 */
+.device-table .col-name {
+  width: 250px;
 }
 
-.device-table th:nth-child(2) {
-  width: 21%;
+.device-table .col-location {
+  width: 280px;
 }
 
-.device-table th:nth-child(3) {
-  width: 16%;
+.device-table .col-status {
+  width: 150px;
 }
 
-.device-table th:nth-child(4) {
-  width: 13%;
+.device-table .col-last-seen {
+  width: 250px;
 }
 
-.device-table th:nth-child(5) {
-  width: 14%;
+.device-table .col-actions {
+  width: 180px;
 }
 
-.device-table th:nth-child(6) {
-  width: 12%;
+/* 양 끝 여백 열은 폭을 지정하지 않아야 남는 폭을 전부 가져간다 (table-layout: fixed)
+   표 최소 폭 = 정보 열 합(890px) + 양 끝 최소 여백 24px × 2 */
+.device-table {
+  min-width: 938px;
 }
 
+.device-table .device-edge {
+  padding: 0;
+}
+
+/* 열 이름과 데이터 정렬을 맞춘다
+   - 글자 길이가 제각각인 카메라 이름 · 설치 위치: 열 이름과 데이터 모두 왼쪽 정렬, 같은 안쪽 여백
+   - 상태 · 마지막 수신 · 작업: 열 이름과 데이터 모두 가운데 정렬 */
+.device-table th:nth-child(2),
+.device-table td:nth-child(2),
+.device-table th:nth-child(3),
+.device-table td:nth-child(3) {
+  text-align: left;
+}
+
+.device-last-seen {
+  font-variant-numeric: tabular-nums;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.device-last-seen.empty {
+  opacity: 0.7;
+}
+
+.device-table td.device-empty {
+  color: var(--text-muted);
+}
+
+/* 새로고침 · 등록 버튼과 데이터 출처 표시 */
+.device-manage-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.register-camera-button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.register-camera-button .spinning {
+  animation: device-spin 1s linear infinite;
+}
+
+@keyframes device-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.device-mac {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
+  font-size: 13px;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+}
+
+/* Online / Offline 글자 폭이 달라도 아이콘 위치가 같도록 */
 .device-status {
+  min-width: 76px;
+
   display: inline-flex;
   align-items: center;
   gap: 7px;
@@ -152,22 +361,25 @@
 }
 
 .device-status.online {
-  color: #6FBF9A;
+  color: var(--success);
 }
 
 .device-status.online .status-dot {
-  background-color: #6FBF9A;
+  background-color: var(--success);
 }
 
 .device-status.offline {
-  color: #D97878;
+  color: var(--danger);
 }
 
 .device-status.offline .status-dot {
-  background-color: #D97878;
+  background-color: var(--danger);
 }
 
 .icon-button {
+  width: 32px;
+  height: 32px;
+
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -175,27 +387,29 @@
   padding: 0;
 
   border: none;
+  border-radius: 9px;
 
   background-color: transparent;
-  color: #bdc6ce;
+  color: var(--text-muted);
 
-  font-size: 19px;
+  font-size: 17px;
   cursor: pointer;
 }
 
 .icon-button:hover {
   color: white;
+  box-shadow: var(--raised-sm);
 }
 
 .icon-button.delete:hover {
-  color: #D97878;
+  color: var(--danger);
 }
 
 .device-actions {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
+  gap: 20px;
 }
 
 .default-radio {
@@ -214,14 +428,16 @@
   width: 17px;
   height: 17px;
 
-  border: 2px solid #687681;
+  background-color: var(--bg);
+  box-shadow: var(--inset);
   border-radius: 50%;
 
   cursor: pointer;
 }
 
 .default-radio input:checked + span {
-  border: 5px solid #438dd2;
+  border: 5px solid var(--bg);
+  background-color: var(--accent);
 
   box-sizing: border-box;
 }
@@ -229,9 +445,10 @@
 .device-empty {
   padding: 70px;
 
-  border: 1px solid #34404b;
-  border-radius: 7px;
+  border: none;
+  box-shadow: var(--raised);
+  border-radius: var(--radius-lg);
 
   text-align: center;
-  color: #83919c;
+  color: var(--text-muted);
 }

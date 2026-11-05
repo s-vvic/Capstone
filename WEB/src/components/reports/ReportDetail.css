@@ -1,0 +1,269 @@
+/* =========================
+   통계 상세 보기 모달
+========================= */
+
+.report-detail-range {
+  margin: -6px 0 14px;
+
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.report-detail-hint {
+  margin: -6px 0 12px;
+
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* 요약 수치 */
+.report-detail-kpis {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+
+  margin-bottom: 16px;
+  padding: 12px 0;
+
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.report-detail-kpi {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  padding: 0 16px;
+}
+
+.report-detail-kpi:first-child {
+  padding-left: 0;
+}
+
+.report-detail-kpi + .report-detail-kpi {
+  border-left: 1px solid var(--line);
+}
+
+.report-detail-kpi span {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.report-detail-kpi strong {
+  font-size: 22px;
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+}
+
+.report-detail-kpi strong small {
+  margin-left: 3px;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+.report-detail-kpi em {
+  font-size: 11px;
+  font-style: normal;
+  color: var(--text-muted);
+}
+
+.report-detail-chart {
+  margin-bottom: 16px;
+}
+
+/* 표 */
+.report-detail-table {
+  width: 100%;
+
+  border-collapse: collapse;
+
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.report-detail-table th,
+.report-detail-table td {
+  height: 36px;
+  padding: 0 12px;
+
+  text-align: right;
+  border-bottom: 1px solid var(--line);
+}
+
+.report-detail-table th:first-child,
+.report-detail-table td:first-child {
+  text-align: left;
+}
+
+.report-detail-table td:first-child {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.report-detail-table th {
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.report-detail-table td.up {
+  color: var(--warning);
+}
+
+.report-detail-table td.down {
+  color: var(--success);
+}
+
+/* 도넛 + 표 */
+.report-detail-split {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 28px;
+}
+
+.report-detail-split .donut-chart {
+  flex-direction: column;
+  gap: 16px;
+}
+
+.report-detail-split .chart-legend {
+  display: none;
+}
+
+/* 시간대 상위 */
+.report-detail-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 20px;
+
+  font-size: 13px;
+}
+
+.report-detail-top span {
+  color: var(--text-muted);
+}
+
+.report-detail-top strong {
+  color: #fff;
+  font-weight: 600;
+}
+
+/* 순위 전체 */
+.report-detail-rank .rank-bars {
+  gap: 8px;
+}
+
+/* 카메라 목록 */
+.report-detail-columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0;
+
+  margin-top: 18px;
+}
+
+.report-detail-columns.three {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.report-detail-columns > section {
+  min-width: 0;
+  padding: 0 16px;
+}
+
+.report-detail-columns > section:first-child {
+  padding-left: 0;
+}
+
+.report-detail-columns > section + section {
+  border-left: 1px solid var(--line);
+}
+
+.report-detail-columns h4 {
+  margin: 0 0 8px;
+  font-size: 13px;
+}
+
+.report-detail-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.report-detail-list li + li {
+  border-top: 1px solid var(--line);
+}
+
+.report-detail-list li > button,
+.report-detail-list li > div {
+  width: 100%;
+  min-height: 40px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+
+  padding: 6px 4px;
+  box-sizing: border-box;
+
+  background: none;
+  color: var(--accent);
+  border: none;
+
+  font-size: 13px;
+  text-align: left;
+}
+
+.report-detail-list li > button {
+  cursor: pointer;
+  border-radius: 6px;
+}
+
+.report-detail-list li > button:hover {
+  background-color: var(--hover);
+}
+
+.report-detail-list li > button > small {
+  margin-left: auto;
+  color: var(--text-muted);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.report-detail-list li > button > svg {
+  flex-shrink: 0;
+  color: var(--text-muted);
+}
+
+.report-detail-name {
+  min-width: 0;
+
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.report-detail-name small {
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+.report-detail-error {
+  color: var(--danger);
+  font-size: 11px;
+}
+
+.report-detail-empty {
+  padding: 12px 4px;
+  font-size: 12px;
+  color: var(--text-muted);
+}

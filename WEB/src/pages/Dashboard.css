@@ -1,0 +1,724 @@
+/* =========================
+   한 화면 레이아웃
+   대시보드에서만 레이아웃을 뷰포트 높이로 고정해서
+   헤더 / 배너를 뺀 나머지 높이를 카드가 꽉 채우도록
+========================= */
+
+.main-layout:has(> .dashboard-page) {
+  height: 100vh;
+
+  display: flex;
+  flex-direction: column;
+}
+
+.main-layout:has(> .dashboard-page) > :not(.dashboard-page) {
+  flex-shrink: 0;
+}
+
+.dashboard-page {
+  flex: 1;
+  min-height: 460px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+
+  padding: 0 30px 24px;
+  box-sizing: border-box;
+
+  color: var(--accent);
+}
+
+
+/* =========================
+   요약 카드
+========================= */
+
+.dash-summary {
+  flex-shrink: 0;
+
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.dash-stat {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  padding: 10px 16px;
+
+  background-color: var(--bg);
+  color: var(--accent);
+
+  border: none;
+  box-shadow: var(--raised);
+  border-radius: var(--radius-md);
+
+  text-align: left;
+  cursor: pointer;
+}
+
+.dash-stat:hover {
+  background-color: var(--hover);
+}
+
+.dash-stat-icon {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  box-shadow: var(--inset);
+  border-radius: var(--radius-sm);
+
+  font-size: 15px;
+}
+
+.dash-stat-label {
+  flex: 1;
+  min-width: 0;
+
+  font-size: 12px;
+  color: var(--text-muted);
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dash-stat-value {
+  font-size: 20px;
+  line-height: 1;
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.dash-stat-value small {
+  margin-left: 3px;
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+.dash-stat.online .dash-stat-icon {
+  color: var(--success);
+}
+
+.dash-stat.offline .dash-stat-icon {
+  color: var(--danger);
+}
+
+.dash-stat.warning .dash-stat-icon {
+  color: var(--warning);
+}
+
+
+/* =========================
+   카드 그리드
+========================= */
+
+.dash-grid {
+  flex: 1;
+  min-height: 0;
+
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) clamp(440px, 32%, 600px);
+  gap: 20px;
+}
+
+.dash-card {
+  display: flex;
+  flex-direction: column;
+
+  padding: 18px 20px;
+
+  background-color: var(--bg);
+
+  box-shadow: var(--raised);
+  border-radius: var(--radius-lg);
+
+  min-width: 0;
+  min-height: 0;
+}
+
+.dash-card-header {
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+
+  margin-bottom: 14px;
+}
+
+.dash-card-header h3 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.dash-link {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+
+  background: none;
+  border: none;
+  color: var(--text-muted);
+
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.dash-link:hover {
+  color: var(--accent);
+}
+
+/* 카드 안의 하위 영역 */
+
+.dash-pane {
+  display: flex;
+  flex-direction: column;
+
+  min-width: 0;
+  min-height: 0;
+}
+
+.dash-pane-header {
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+
+  min-height: 30px;
+  margin-bottom: 10px;
+}
+
+.dash-pane-header h4 {
+  margin: 0;
+
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.dash-segment {
+  display: flex;
+  gap: 2px;
+
+  padding: 3px;
+
+  box-shadow: var(--inset);
+  border-radius: var(--radius-sm);
+}
+
+.dash-segment button {
+  padding: 4px 10px;
+
+  background: none;
+  color: var(--text-muted);
+
+  border: none;
+  border-radius: 7px;
+
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.dash-segment button.active {
+  color: var(--bg);
+  background-color: var(--accent);
+  font-weight: 600;
+}
+
+
+/* =========================
+   이벤트 현황
+========================= */
+
+.dash-events-body {
+  flex: 1;
+  min-height: 0;
+
+  display: grid;
+  grid-template-columns: minmax(320px, 0.75fr) minmax(0, 1fr);
+  gap: 24px;
+}
+
+/* 유형별 발생: 도넛 위, 범례 아래 */
+.dash-type-pane .donut-chart {
+  flex: 1;
+
+  flex-direction: column;
+  justify-content: center;
+  gap: 18px;
+}
+
+.dash-type-pane .donut-center strong {
+  font-size: 34px;
+}
+
+.dash-type-pane .donut-center span {
+  font-size: 13px;
+}
+
+.dash-type-pane .chart-legend {
+  flex: none;
+  width: 100%;
+  max-width: 340px;
+  gap: 2px;
+}
+
+.dash-type-pane .chart-legend li {
+  padding: 4px 8px;
+  font-size: 12px;
+}
+
+/* 최근 발생: 유형별 영역과 세로 구분선 */
+.dash-recent-pane {
+  padding-left: 24px;
+  border-left: 1px solid var(--line);
+}
+
+/* 행 높이를 늘려 카드 높이를 채우고, 모자라면 목록 안에서만 스크롤 */
+.recent-event-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+
+  display: flex;
+  flex-direction: column;
+
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.recent-event-list li {
+  flex: 1 0 40px;
+  max-height: 54px;
+}
+
+.recent-event-list li + li {
+  border-top: 1px solid var(--line);
+}
+
+.recent-event-list button {
+  width: 100%;
+  height: 100%;
+
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  padding: 0 6px;
+
+  background: none;
+  border: none;
+  border-radius: 6px;
+  color: var(--accent);
+
+  text-align: left;
+  cursor: pointer;
+}
+
+.recent-event-list button:hover {
+  background-color: var(--hover);
+}
+
+.recent-event-swatch {
+  width: 4px;
+  height: 18px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+/* 이벤트 유형 · 카메라 이름/위치를 한 줄로 */
+.recent-event-main {
+  flex: 1;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  min-width: 0;
+}
+
+.recent-event-main strong {
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.recent-event-main span {
+  font-size: 12px;
+  color: var(--text-muted);
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 발생 시간 · 확인 상태도 한 줄로 */
+.recent-event-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.recent-event-meta small {
+  color: var(--text-muted);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.recent-event-status {
+  min-width: 52px;
+  box-sizing: border-box;
+
+  font-size: 11px;
+  text-align: center;
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+.recent-event-status.unconfirmed {
+  color: var(--warning);
+  box-shadow: inset 0 0 0 1px var(--warning);
+}
+
+.recent-event-status.confirmed {
+  color: var(--text-muted);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+
+/* =========================
+   VPN 연결 상태 - Client VPN (이 PC)
+========================= */
+
+.client-vpn-strip {
+  flex-shrink: 0;
+
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+
+  margin-bottom: 14px;
+  padding: 2px 0 16px;
+
+  border-bottom: 1px solid var(--line);
+}
+
+.client-vpn-icon {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  box-shadow: var(--raised-sm);
+  border-radius: 50%;
+
+  font-size: 18px;
+  color: var(--text-muted);
+}
+
+.client-vpn-strip.connected .client-vpn-icon,
+.client-vpn-strip.connected .client-vpn-label {
+  color: var(--success);
+}
+
+.client-vpn-strip.error .client-vpn-icon,
+.client-vpn-strip.error .client-vpn-label {
+  color: var(--danger);
+}
+
+.client-vpn-strip.connecting .client-vpn-icon,
+.client-vpn-strip.connecting .client-vpn-label {
+  color: var(--warning);
+}
+
+/* 폭이 모자라면 버튼이 다음 줄로 내려감 */
+.client-vpn-text {
+  flex: 1;
+  min-width: 180px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.client-vpn-caption {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.client-vpn-label {
+  font-size: 15px;
+}
+
+.client-vpn-text p {
+  margin: 0;
+
+  color: var(--text-muted);
+  font-size: 11px;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.client-vpn-actions {
+  flex-shrink: 0;
+  margin-left: auto;
+
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.client-vpn-actions .btn {
+  white-space: nowrap;
+}
+
+.client-vpn-demo {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+
+  padding: 0;
+
+  background: none;
+  border: none;
+  color: var(--text-muted);
+
+  font-size: 11px;
+  cursor: pointer;
+}
+
+
+/* =========================
+   VPN 연결 상태 - Device VPN (카메라)
+========================= */
+
+.dash-device-pane {
+  flex: 1;
+}
+
+.dash-vpn-filter {
+  display: flex;
+  gap: 6px;
+}
+
+.dash-vpn-filter button {
+  padding: 4px 10px;
+
+  background: none;
+  color: var(--text-muted);
+
+  border: none;
+  box-shadow: var(--raised-sm);
+  border-radius: 14px;
+
+  font-size: 11px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.dash-vpn-filter button.active {
+  color: var(--accent);
+  box-shadow: var(--inset);
+}
+
+/* 상태별 기기 수 · 비율 */
+.dash-vpn-stats {
+  flex-shrink: 0;
+
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+
+  margin: 0 0 6px;
+  padding: 4px 0 14px;
+
+  border-bottom: 1px solid var(--line);
+
+  list-style: none;
+}
+
+/* 칸 사이는 세로 구분선 */
+.dash-vpn-stats li {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: baseline;
+  row-gap: 4px;
+
+  padding: 2px 14px;
+}
+
+.dash-vpn-stats li:first-child {
+  padding-left: 4px;
+}
+
+.dash-vpn-stats li + li {
+  border-left: 1px solid var(--line);
+}
+
+.dash-vpn-stats-label {
+  grid-column: span 2;
+
+  display: flex;
+  align-items: center;
+  gap: 7px;
+
+  font-size: 12px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.dash-vpn-stats strong {
+  font-size: 20px;
+  line-height: 1;
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+}
+
+.dash-vpn-stats strong small {
+  margin-left: 3px;
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+.dash-vpn-stats-percent {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* 기기 목록은 남는 높이를 채우고, 넘치면 목록 안에서만 스크롤 */
+.dash-vpn-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+
+  margin: 0;
+  padding: 0 4px 0 0;
+
+  list-style: none;
+}
+
+.dash-vpn-list li {
+  height: 38px;
+  box-sizing: border-box;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 0 4px;
+
+  border-bottom: 1px solid var(--line);
+  font-size: 13px;
+}
+
+.dash-vpn-name small {
+  margin-left: 8px;
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+.dash-vpn-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+}
+
+.dash-vpn-status .status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: currentColor;
+}
+
+.dash-vpn-status.connected {
+  color: var(--success);
+}
+
+.dash-vpn-status.disconnected {
+  color: var(--text-muted);
+}
+
+.dash-vpn-status.error {
+  color: var(--danger);
+}
+
+.dash-empty {
+  justify-content: center !important;
+  color: var(--text-muted);
+}
+
+/* =========================
+   세로가 짧은 화면 (노트북 등)
+========================= */
+
+@media (max-height: 760px) {
+  .dashboard-page {
+    gap: 14px;
+    padding-bottom: 16px;
+  }
+
+  .dash-stat {
+    padding: 8px 14px;
+  }
+
+  .dash-card {
+    padding: 14px 18px;
+  }
+
+  .dash-card-header {
+    margin-bottom: 10px;
+  }
+
+  .dash-pane-header {
+    margin-bottom: 6px;
+  }
+
+  .dash-type-pane .donut-figure {
+    zoom: 0.65;
+  }
+
+  .dash-vpn-stats {
+    padding-bottom: 10px;
+  }
+
+  .dash-type-pane .chart-legend li {
+    padding: 3px 8px;
+  }
+
+  .client-vpn-strip {
+    margin-bottom: 10px;
+    padding-bottom: 12px;
+  }
+}
+
+.spin {
+  animation: dash-spin 0.9s linear infinite;
+}
+
+@keyframes dash-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

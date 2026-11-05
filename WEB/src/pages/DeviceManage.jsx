@@ -1,185 +1,254 @@
-import "./DeviceManage.css";
-import { useState, useEffect, useCallback } from "react";
-import { FiEdit2, FiTrash2, FiPlus } from "react-icons/fi";
+﻿import "./DeviceManage.css";
+import { useState } from "react";
+import {
+  FiEdit2,
+  FiTrash2,
+  FiPlus,
+  FiVideo,
+  FiMapPin,
+  FiActivity,
+  FiSliders,
+  FiWifi,
+  FiWifiOff,
+  FiClock,
+  FiRefreshCw,
+} from "react-icons/fi";
 
 import EditableCameraName from "../components/EditableCameraName";
 import CameraRegisterModal from "../components/CameraRegisterModal";
-import { cameraApi } from "../api/cameraApi";
-import { cameras as initialCameras } from "../data/cameras";
+import CameraSourceBadge from "../components/CameraSourceBadge";
+import Pagination from "../components/Pagination";
+import useFitPagination from "../hooks/useFitPagination";
+import useCameraList from "../hooks/useCameraList";
+
+import { registerCamera, updateCameraName } from "../api/cameraApi";
+import { formatLastSeen } from "../utils/formatDateTime";
+import { deviceIdFromMac } from "../utils/mac";
+
+/* 보드 목록 (ICD 2.2.1 GET /devices)
+   - 표시 항목: name, location, status(online / offline), last_seen (UTC → KST, null이면 "기록 없음")
+   - 목록은 5초마다 자동으로 다시 불러온다 (useCameraList). 서버에 닿지 못하면 목업을 보여 준다
+   - 이름 수정 · 삭제 · 등록은 아직 화면에서만 반영된다
+     (서버 데이터일 때는 다음 자동 갱신 때 서버 값으로 돌아간다) */
 
 function DeviceManage() {
-  const [cameras, setCameras] = useState([]);
-  const [editingCameraId, setEditingCameraId] = useState(null);
-  const [isRegisterOpen, setIsRegisterOpen] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const {
+    cameras,
+    setCameras,
+    source,
+    fetchedAt,
+    isFetching,
+    refresh,
+  } = useCameraList();
+  const [actionError, setActionError] = useState("");
+  const [ editingCameraId, setEditingCameraId ] = useState(null);
 
-  // 백엔드 기기 목록을 UI 포맷으로 변환
-  const transformDevices = useCallback((devices) => {
-    if (!Array.isArray(devices)) return [];
-    return devices.map((d) => ({
-      id: d.device_id || d.id,
-      name: d.name || d.device_id,
-      location: d.location || "미설정",
-      status: d.status || (d.is_online ? "online" : "offline"),
-      serial_no: d.serial_no || d.mac_no || "",
-      vpn_ip: d.vpn_ip || "-",
-      rtsp_stream_url: d.rtsp_stream_url || "",
-    }));
-  }, []);
+  const [ isRegisterOpen, setIsRegisterOpen ] = useState(false);
 
-  const loadCameras = useCallback(async () => {
-    try {
-      const data = await cameraApi.getCameras();
-      if (Array.isArray(data) && data.length > 0) {
-        setCameras(transformDevices(data));
-      } else {
-        setCameras(initialCameras);
-      }
-    } catch (error) {
-      console.warn("[DeviceManage] Using fallback cameras data:", error.message);
-      setCameras(initialCameras);
-    } finally {
-      setLoading(false);
-    }
-  }, [transformDevices]);
+  /* pagination: 화면 높이에 들어가는 만큼만 한 페이지에 표시 */
+  const {
+    areaRef: tableAreaRef,
+    pageItems: currentCameras,
+    page: safePage,
+    setPage: setCurrentPage,
+    totalPages,
+    rowsPerPage: camerasPerPage,
+  } = useFitPagination(cameras);
 
-  useEffect(() => {
-    loadCameras();
-  }, [loadCameras]);
+  function handlePageChange(page) {
+    setCurrentPage(page);
+    setEditingCameraId(null);
+  }
 
   async function handleCameraNameChange(cameraId, newName) {
-    // 1. 낙관적 UI 업데이트
-    setCameras((prev) =>
-      prev.map((camera) =>
-        camera.id === cameraId ? { ...camera, name: newName } : camera
-      )
-    );
-
-    // 2. 실제 백엔드 PATCH /devices/:id 호출 (SV-F-012, ICD 2.2.4)
-    try {
-      await cameraApi.updateCamera(cameraId, { name: newName });
-    } catch (error) {
-      console.warn("[DeviceManage] Failed to update camera name on server:", error);
-    }
+    const camera = cameras.find((item) => item.device_id === cameraId);
+    if (!camera) return;
+    setActionError("");
+    try { await updateCameraName(camera.mac, newName); await refresh(); }
+    catch (error) { setActionError(error.message); }
   }
-
-  function handleDeleteCamera(cameraId) {
-    setCameras((prev) => prev.filter((camera) => camera.id !== cameraId));
+  function handleDeleteCamera() {
+    setActionError("현재 서버는 카메라 삭제 API를 제공하지 않습니다.");
   }
-
   async function handleRegisterCamera(newCamera) {
+    setActionError("");
     try {
-      // 실제 백엔드 POST /devices/register 호출 (SV-F-010, ICD 2.2.2)
-      const registered = await cameraApi.registerCamera({
-        name: newCamera.name || "신규 카메라",
-        serial_no: newCamera.serial_no || `VPNCAM-${Date.now()}`,
-        mac_no: newCamera.mac_no || null,
-        location: newCamera.location || "거실",
-        register_type: "serial",
-      });
-
-      setCameras((prev) => [
-        ...prev,
-        {
-          id: registered.device_id || registered.id || Date.now(),
-          name: registered.name || newCamera.name,
-          location: registered.location || newCamera.location || "미설정",
-          status: registered.status || "offline",
-        },
-      ]);
-    } catch (error) {
-      console.warn("[DeviceManage] Register API fallback to local state:", error);
-      setCameras((prev) => [
-        ...prev,
-        {
-          ...newCamera,
-          id: Date.now(),
-          status: "offline",
-        },
-      ]);
-    } finally {
+      await registerCamera(newCamera);
+      await refresh();
       setIsRegisterOpen(false);
-    }
+      setCurrentPage(1);
+    } catch (error) { setActionError(error.message); }
   }
+  /*
+  async function handleRegiserCamera(cameraData) {
+    const response = await registerCamera(cameraData);
+    setCameras((prev) => [
+      ...prev,
+      response,
+    ]);
+  
+    setIsRegisterOpen(false);
+  }
+  */
 
   return (
     <main className="device-manage">
+      {actionError && <p role="alert">{actionError}</p>}
       <div className="device-manage-top">
-        <h2 className="device-manage-title">등록된 카메라</h2>
-        <button
-          className="register-camera-button"
-          onClick={() => setIsRegisterOpen(true)}
-        >
-          <FiPlus />
-          카메라 등록
-        </button>
+        <h2 className="device-manage-title">
+          <span className="device-title-icon">
+            <FiVideo />
+          </span>
+          등록된 카메라
+        </h2>
+        <div className="device-manage-actions">
+          <CameraSourceBadge source={source} fetchedAt={fetchedAt} />
+
+          <button
+            type="button"
+            className="register-camera-button"
+            onClick={refresh}
+            disabled={isFetching}
+            title="서버에서 보드 목록 다시 불러오기"
+          >
+            <FiRefreshCw className={isFetching ? "spinning" : ""} />
+            새로고침
+          </button>
+
+          <button
+            className="register-camera-button"
+            onClick={() => setIsRegisterOpen(true)}
+          >
+            <FiPlus />
+            카메라 등록
+          </button>
+        </div>
       </div>
 
-      <div className="device-table-wrapper">
-        <table className="device-table">
-          <thead>
-            <tr>
-              <th>카메라 이름</th>
-              <th>설치 위치</th>
-              <th>상태</th>
-              <th>작업</th>
-            </tr>
-          </thead>
+      <div className="device-table-area" ref={tableAreaRef}>
+        <div className="device-table-wrapper">
+          <table className="device-table">
+            {/* 양 끝 빈 열(col-edge)이 남는 폭을 나눠 가져서, 정보 열은 가운데에 모이고 열 사이 간격은 고정된다 */}
+            <colgroup>
+              <col className="col-edge" />
+              <col className="col-name" />
+              <col className="col-location" />
+              <col className="col-status" />
+              <col className="col-last-seen" />
+              <col className="col-actions" />
+              <col className="col-edge" />
+            </colgroup>
 
-          <tbody>
-            {cameras.map((camera) => (
-              <tr key={camera.id}>
-                <td>
-                  <EditableCameraName
-                    initialName={camera.name}
-                    isEditing={editingCameraId === camera.id}
-                    onSave={(newName) => {
-                      handleCameraNameChange(camera.id, newName);
-                      setEditingCameraId(null);
-                    }}
-                    onCancel={() => setEditingCameraId(null)}
-                  />
-                </td>
-
-                <td>{camera.location || "미설정"}</td>
-
-                <td>
-                  <span className={`device-status ${camera.status}`}>
-                    <span className="status-dot" />
-                    {camera.status === "online" ? "Online" : "Offline"}
-                  </span>
-                </td>
-
-                <td>
-                  <div className="device-actions">
-                    <button
-                      type="button"
-                      className="icon-button"
-                      onClick={() => setEditingCameraId(camera.id)}
-                      aria-label="카메라 이름 수정"
-                      title="이름 수정"
-                    >
-                      <FiEdit2 />
-                    </button>
-
-                    <button
-                      className="icon-button delete"
-                      onClick={() => handleDeleteCamera(camera.id)}
-                      aria-label="카메라 삭제"
-                    >
-                      <FiTrash2 />
-                    </button>
-                  </div>
-                </td>
+            <thead>
+              <tr>
+                <th className="device-edge" aria-hidden="true" />
+                <th><span className="th-label"><FiVideo />카메라 이름</span></th>
+                <th><span className="th-label"><FiMapPin />설치 위치</span></th>
+                <th><span className="th-label"><FiActivity />상태</span></th>
+                <th><span className="th-label"><FiClock />마지막 수신</span></th>
+                <th><span className="th-label"><FiSliders />작업</span></th>
+                <th className="device-edge" aria-hidden="true" />
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+
+            <tbody>
+              {currentCameras.length === 0 && (
+                <tr>
+                  <td colSpan={7} className="device-empty">
+                    {source === "loading" ? "불러오는 중..." : "등록된 카메라가 없습니다."}
+                  </td>
+                </tr>
+              )}
+
+              {currentCameras.map((camera) => (
+                <tr key={camera.device_id}>
+                  <td className="device-edge" aria-hidden="true" />
+
+                  <td>
+                    <div className="device-name-cell">
+                      <EditableCameraName
+                        initialName={camera.name}
+                        isEditing={editingCameraId === camera.device_id}
+                        onSave={(newName) => {
+                          handleCameraNameChange(camera.device_id, newName)
+                          setEditingCameraId(null);
+                        }}
+                        onCancel={() => setEditingCameraId(null)}
+                      />
+                    </div>
+                  </td>
+
+                  <td>
+                    <span className={`device-location ${camera.location ? "" : "unset"}`.trim()}>
+                      <FiMapPin />
+                      {camera.location || "미설정"}
+                    </span>
+                  </td>
+
+                  <td>
+                    <span
+                      className={`device-status ${camera.status}`}
+                    >
+                      {camera.status === "online" ? <FiWifi /> : <FiWifiOff />}
+                      {camera.status === "online"
+                        ? "Online"
+                        : "Offline"}
+                    </span>
+                  </td>
+
+                  <td>
+                    <span className={`device-last-seen ${camera.last_seen ? "" : "empty"}`.trim()}>
+                      {formatLastSeen(camera.last_seen)}
+                    </span>
+                  </td>
+
+                  <td>
+                    <div className="device-actions">
+                      <button
+                        type="button"
+                        className="icon-button"
+                        onClick={() => setEditingCameraId(camera.device_id)}
+                        aria-label="카메라 이름 수정"
+                        title="이름 수정"
+                      >
+                        <FiEdit2 />
+                      </button>
+
+                      <button
+                        type="button"
+                        className="icon-button delete"
+                        onClick={() =>
+                          handleDeleteCamera(camera.device_id)
+                        }
+                        aria-label="카메라 삭제"
+                        title="삭제"
+                      >
+                        <FiTrash2 />
+                      </button>
+                    </div>
+                  </td>
+
+                  <td className="device-edge" aria-hidden="true" />
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
+
+      <Pagination
+        currentPage={safePage}
+        totalPages={totalPages}
+        onPageChange={handlePageChange}
+        totalItems={cameras.length}
+        itemLabel="대"
+      />
+
       {isRegisterOpen && (
         <CameraRegisterModal
           onClose={() => setIsRegisterOpen(false)}
           onRegister={handleRegisterCamera}
+          registeredMacs={cameras.map((camera) => camera.mac).filter(Boolean)}
         />
       )}
     </main>

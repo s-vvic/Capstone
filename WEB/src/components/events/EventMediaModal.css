@@ -1,0 +1,145 @@
+.media-tabs {
+  display: inline-flex;
+  gap: 4px;
+
+  margin-bottom: 16px;
+  padding: 4px;
+
+  box-shadow: var(--inset);
+  border-radius: var(--radius-md);
+}
+
+.media-tabs button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  padding: 7px 14px;
+
+  background: none;
+  color: var(--text-muted);
+
+  border: none;
+  border-radius: var(--radius-sm);
+
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.media-tabs button.active {
+  background-color: var(--accent);
+  color: var(--bg);
+  font-weight: 600;
+}
+
+.media-viewer {
+  position: relative;
+
+  width: 100%;
+  aspect-ratio: 16 / 9;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background-color: #111316;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.media-viewer img,
+.media-viewer video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.media-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+
+  color: var(--text-muted);
+}
+
+.media-placeholder > svg {
+  font-size: 40px;
+}
+
+.media-placeholder small {
+  font-size: 12px;
+}
+
+.media-placeholder.video {
+  width: 80%;
+}
+
+.media-play {
+  width: 60px;
+  height: 60px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background-color: transparent;
+  color: var(--accent);
+
+  border: none;
+  box-shadow: var(--raised);
+  border-radius: 50%;
+
+  font-size: 22px;
+  cursor: pointer;
+}
+
+.media-progress {
+  width: 100%;
+  height: 4px;
+
+  margin-top: 8px;
+
+  background-color: var(--line);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.media-progress-fill {
+  width: 0;
+  height: 100%;
+
+  background-color: var(--accent);
+}
+
+.media-progress-fill.playing {
+  animation: media-progress 30s linear forwards;
+}
+
+@keyframes media-progress {
+  to {
+    width: 100%;
+  }
+}
+
+.media-stamp {
+  position: absolute;
+  left: 12px;
+  bottom: 10px;
+
+  padding: 3px 8px;
+
+  background-color: rgba(0, 0, 0, 0.55);
+  color: #fff;
+
+  border-radius: 4px;
+  font-size: 11px;
+}
+
+.media-footer-info {
+  margin-right: auto;
+  align-self: center;
+
+  font-size: 12px;
+  color: var(--text-muted);
+}

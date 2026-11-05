@@ -1,7 +1,34 @@
+/* =========================
+   한 화면 레이아웃
+   VPN 연결 관리에서만 레이아웃을 뷰포트 높이로 고정하고
+   화면에 들어가는 행 수만큼 한 페이지에 표시 (useFitPagination)
+========================= */
+
+.main-layout:has(> .vpn-page) {
+  height: 100vh;
+
+  display: flex;
+  flex-direction: column;
+}
+
+.main-layout:has(> .vpn-page) > :not(.vpn-page) {
+  flex-shrink: 0;
+}
+
 .vpn-page {
-  padding: 20px 30px 40px;
+  flex: 1;
+  min-height: 420px;
+
+  display: flex;
+  flex-direction: column;
+
+  padding: 0 30px 20px;
 
   box-sizing: border-box;
+}
+
+.vpn-page > .vpn-summary-bar {
+  flex-shrink: 0;
 }
 
 /* =========================
@@ -18,24 +45,45 @@
   font-size: 12px;
 }
 
+/* 남는 높이를 채우는 표 영역 (검색줄 + 표 + 페이지네이션) */
 .vpn-table-section {
-  margin-top: 15px;
+  flex: 1;
+  min-height: 0;
 
-  background-color: #25272c;
+  display: flex;
+  flex-direction: column;
 
-  border: 1px solid #34404b;
-  border-radius: 8px;
+  margin-top: 16px;
+
+  background-color: var(--bg);
+
+  border: none;
+  box-shadow: var(--raised);
+  border-radius: var(--radius-lg);
 }
+
 
 /* 검색 */
 
 .vpn-toolbar {
+  flex-shrink: 0;
+
   display: flex;
   align-items: center;
 
   gap: 12px;
 
-  padding: 15px;
+  padding: 14px 15px;
+}
+
+/* 이 영역 높이에 들어가는 만큼만 한 페이지에 표시 */
+.vpn-table-area {
+  flex: 1;
+  min-height: 0;
+}
+
+.vpn-table-section .pagination-container {
+  flex-shrink: 0;
 }
 
 .vpn-toolbar input {
@@ -50,11 +98,12 @@
 
   box-sizing: border-box;
 
-  background-color: rgba(255, 255, 255, 0.025);
-  color: #bdd9d7;
+  background-color: var(--hover);
+  color: var(--accent);
 
-  border: 1px solid #34404b;
-  border-radius: 5px;
+  border: none;
+  box-shadow: var(--inset);
+  border-radius: var(--radius-md);
 
   outline: none;
 }
@@ -65,124 +114,21 @@
   padding: 0 14px;
 
   background-color: transparent;
-  color: #bdd9d7;
+  color: var(--accent);
 
-  border: 1px solid #34404b;
-  border-radius: 5px;
+  border: none;
+  box-shadow: var(--raised-sm);
+  border-radius: var(--radius-md);
 
   cursor: pointer;
 }
 
 .filter-reset-button:hover {
-  background-color: #34404b;
+  background-color: var(--hover);
 }
 
-/* =========================
-   Client Peer VPN
-========================= */
-
-.peer-vpn-box {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-
-  margin-bottom: 15px;
-  padding: 16px 20px;
-
-  background-color: #25272c;
-
-  border: 1px solid #34404b;
-  border-radius: 8px;
-}
-
-/* 왼쪽 정보 */
-
-.peer-vpn-info {
-  display: flex;
-  flex-direction: column;
-
-  gap: 7px;
-}
-
-.peer-vpn-title {
-  color: #bdd9d7;
-
-  font-size: 16px;
-  font-weight: 600;
-}
-
-.peer-vpn-message {
-  font-size: 13px;
-}
-
-/* 연결 안 됨 */
-
-.peer-vpn-box.disconnected .peer-vpn-message {
-  color: #d97878;
-}
-
-/* 연결 중 */
-
-.peer-vpn-box.connecting .peer-vpn-message {
-  color: #d6a85f;
-}
-
-/* 연결 완료 */
-
-.peer-vpn-box.connected .peer-vpn-message {
-  color: #6fbf9a;
-}
-
-/* 연결 오류 */
-
-.peer-vpn-box.error .peer-vpn-message {
-  color: #d97878;
-}
-
-/* =========================
-   연결 중 Spinner
-========================= */
-
-.peer-connect-spinner {
-  width: 14px;
-  height: 14px;
-
-  border: 2px solid rgba(251, 146, 60, 0.3);
-  border-top-color: #d6a85f;
-
-  border-radius: 50%;
-
-  animation: peer-spin 0.7s linear infinite;
-}
-
-@keyframes peer-spin {
-  from {
-    transform: rotate(0deg);
-  }
-
-  to {
-    transform: rotate(360deg);
-  }
-}
-.vpn-feedback {
-  padding: 12px 16px;
-  border: 1px solid #34404b;
-  border-radius: 6px;
-  color: #6fbf9a;
-}
-.vpn-feedback.error {
-  color: #f0a2a2;
-}
-.vpn-row-actions {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 5px;
-}
-.vpn-page button:disabled {
-  opacity: 0.55;
-  cursor: wait;
-}
-.vpn-toolbar {
-  flex-wrap: wrap;
-}
+.vpn-feedback { padding: 10px 16px; color: #6fbf9a; }
+.vpn-feedback.error { color: #f0a2a2; }
+.vpn-row-actions { display: flex; flex-wrap: wrap; gap: 5px; justify-content: center; }
+.vpn-page button:disabled { opacity: 0.55; cursor: wait; }
+.vpn-device-detail-button { background: none; border: 0; color: inherit; cursor: pointer; text-align: left; }

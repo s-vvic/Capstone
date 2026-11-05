@@ -1,5 +1,5 @@
 .device-camera-name {
-    color: #BDD9D7;
+    color: var(--accent);
     font-size: 14px;
     text-decoration: none;
 }
@@ -23,13 +23,14 @@
 
     padding: 0 10px;
 
-    border: 1px solid #516474;
-    border-radius: 5px;
+    border: none;
+  box-shadow: var(--inset);
+    border-radius: var(--radius-md);
     outline: none;
     box-sizing: border-box;
 
-    background-color: #111e29;
-    color: #BDD9D7;
+    background-color: var(--bg);
+    color: var(--accent);
 
     font-size: 13px;
 
@@ -37,7 +38,7 @@
 }
 
 .name-input:focus {
-    border-color: #7895ac;
+    box-shadow: var(--inset), 0 0 0 1px var(--accent-ring);
 }
 
 .edit-action {
@@ -50,11 +51,12 @@
     height: 30px;
     padding: 0;
 
-    border: 1px solid #34404b;
-    border-radius: 5px;
+    border: none;
+  box-shadow: var(--raised-sm);
+    border-radius: var(--radius-md);
     background-color: transparent;
 
-    color: #BDD9D7;
+    color: var(--accent);
     cursor: pointer;
 
     font-size: 15px;
@@ -64,15 +66,14 @@
 
 .edit-action:hover {
     background-color: rgba(255, 255, 255, 0.06);
-    color: #fff;
+    color: var(--accent);
 }
 
 .edit-action.save {
-    border-color: rgba(110, 203, 99, 0.45);
-    color: #6FBF9A;
+    color: var(--success);
 }
 
 .edit-action.save:hover {
     background-color: rgba(110, 203, 99, 0.14);
-    color: #8fe085;
+    color: var(--success);
 }

@@ -41,6 +41,7 @@ export function normalizeConnections(connections) {
         ? `${connection.connected_duration_sec}초`
         : "-",
       error: connection.error_type || null,
+      server: connection.vpn_server || "-",
     };
   });
 }
@@ -97,3 +98,9 @@ export async function loadVpnData(options) {
   return { devices: normalizeConnections(connections), server };
 }
 export default vpnApi;
+
+// New UI compatibility: check authenticated reachability, never invent a /status tunnel API.
+export async function fetchClientVpnStatus(options) { await loadVpnData(options); return true; }
+export async function getVpnDevices(options) { return (await loadVpnData(options)).devices; }
+export const changeVpnConnection = (id, action, options) => vpnApi.executeVpnAction(id, action, options);
+export const requestVpnRecovery = (id, options) => vpnApi.recoverVpnConnection(id, options);

@@ -3,8 +3,8 @@
 .main-layout {
   min-height: 100vh;
   min-width: 1200px;
-  background-color: #25272C;
-  color:#BDD9D7;
+  background-color: var(--bg);
+  color:var(--accent);
 }
 
 /* 왼쪽 헤더 */
@@ -20,7 +20,7 @@
   padding: 0 25px;
 
   box-sizing: border-box;
-  color: #BDD9D7;
+  color: var(--accent);
 }
 
 .header-left {
@@ -36,9 +36,10 @@
   flex-shrink: 0;
 
   background-color: transparent;
-  color: #BDD9D7;
-  border: 1px solid #BDD9D7;
-  border-radius: 5px;
+  color: var(--accent);
+  border: none;
+  box-shadow: var(--raised-sm);
+  border-radius: var(--radius-md);
 
   font-size: 18px;
 
@@ -55,7 +56,7 @@
 }
 
 .menu-button:hover {
-  background-color: rgba(255, 255, 255, 0.025);
+  background-color: var(--hover);
 }
 
 .header {
@@ -66,7 +67,7 @@
 .common-header-title {
   margin: 0;
 
-  color: #BDD9D7;
+  color: var(--accent);
   font-size: 30px;
   font-weight: 700;
   line-height: 1;
@@ -94,7 +95,7 @@
   padding: 0;
 
   background-color: transparent;
-  color: #BDD9D7;
+  color: var(--accent);
 
   border: none;
   border-radius: 6px;
@@ -103,7 +104,7 @@
 }
 
 .header-icon-button:hover {
-  background-color: rgba(255, 255, 255, 0.025);
+  background-color: var(--hover);
 }
 
 .header-icon {
@@ -128,8 +129,9 @@
 
   box-sizing: border-box;
 
-  background-color: #ef4444;
-  color: #BDD9D7;
+  background-color: var(--danger);
+  box-shadow: 2px 2px 5px var(--sh-dark);
+  color: var(--accent);
   
   border-radius: 10px;
 
@@ -143,7 +145,7 @@
 
   margin: 0 7px;
 
-  background-color: #3c444e;
+  background-color: var(--line);
 }
 
 /* 사용자 영역 */
@@ -163,7 +165,7 @@
   padding: 0 8px;
 
   background-color: transparent;
-  color: #BDD9D7;
+  color: var(--accent);
 
   border: none;
   border-radius: 6px;
@@ -172,7 +174,7 @@
 }
 
 .user-button:hover {
-  background-color: rgba(255, 255, 255, 0.025);
+  background-color: var(--hover);
 }
 
 .user-icon {
@@ -183,7 +185,8 @@
   align-items: center;
   justify-content: center;
 
-  background-color: #303844;
+  background-color: var(--bg);
+  box-shadow: var(--raised-sm);
 
   border-radius: 50%;
 }
@@ -219,12 +222,12 @@
 
   padding: 6px;
 
-  background-color: #25272C;
+  background-color: var(--bg);
 
-  border: 1px solid #34404b;
-  border-radius: 7px;
+  border: none;
+  box-shadow: var(--raised);
+  border-radius: var(--radius-lg);
 
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
 
   z-index: 200;
 }
@@ -237,7 +240,7 @@
   text-align: left;
 
   background-color: transparent;
-  color: #BDD9D7;
+  color: var(--accent);
 
   border: none;
   border-radius: 5px;
@@ -246,7 +249,7 @@
 }
 
 .user-menu button:hover {
-  background-color: rgba(255, 255, 255, 0.025);
+  background-color: var(--hover);
 }
 
 
@@ -280,14 +283,14 @@
   top: 50px;
   right: 0;
 
-  background-color: #20262f;
+  background-color: var(--bg);
 
-  color: #BDD9D7;
+  color: var(--accent);
 
-  border: 1px solid #414955;
-  border-radius: 7px;
+  border: none;
+  box-shadow: var(--raised);
+  border-radius: var(--radius-lg);
 
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.35);
 
   overflow: hidden;
 
@@ -312,19 +315,19 @@
 
   padding: 0 14px;
 
-  border-bottom: 1px solid #414955;
+  border-bottom: 1px solid var(--line);
 }
 
 .dropdown-header strong {
   font-size: 14px;
-  color: #BDD9D7;
+  color: var(--accent);
 }
 
 .dropdown-header button {
   padding: 0;
 
   background-color: transparent;
-  color: #BDD9D7;
+  color: var(--accent);
 
   border: none;
 
@@ -334,7 +337,7 @@
 }
 
 .dropdown-header button:hover {
-  color: #BDD9D7
+  color: var(--accent)
 }
 
 
@@ -354,10 +357,10 @@
   padding: 12px 14px;
 
   background-color: transparent;
-  color: #BDD9D7;
+  color: var(--accent);
 
   border: none;
-  border-bottom: 1px solid #34404b;
+  border-bottom: 1px solid var(--line);
 
   text-align: left;
 
@@ -369,7 +372,7 @@
 }
 
 .notification-item:hover {
-  background-color: rgba(255, 255, 255, 0.025);
+  background-color: var(--hover);
 }
 
 .notification-dot {
@@ -380,7 +383,7 @@
 
   flex-shrink: 0;
 
-  background-color: #D97878;
+  background-color: var(--danger);
 
   border-radius: 50%;
 }
@@ -394,17 +397,17 @@
 
 .notification-content strong {
   font-size: 13px;
-  color: #BDD9D7;
+  color: var(--accent);
 }
 
 .notification-content span {
-  color: #BDD9D7;
+  color: var(--accent);
 
   font-size: 12px;
 }
 
 .notification-content small {
-  color: #BDD9D7;
+  color: var(--accent);
 
   font-size: 11px;
 }
@@ -426,7 +429,7 @@
   padding: 10px 12px;
 
   background-color: transparent;
-  color: #BDD9D7;
+  color: var(--accent);
 
   border: none;
   border-radius: 5px;
@@ -437,7 +440,7 @@
 }
 
 .settings-dropdown button:hover {
-  background-color: rgba(255, 255, 255, 0.025);
+  background-color: var(--hover);
 }
 
 
@@ -456,7 +459,7 @@
 
   padding: 10px 12px;
 
-  color: #BDD9D7;
+  color: var(--accent);
   background-color: transparent;
 
   border: none;
@@ -468,13 +471,48 @@
 }
 
 .user-settings {
-  color: #BDD9D7;
+  color: var(--accent);
 }
 
 .logout-button {
-  color: #D97878;
+  color: var(--danger);
 }
 
 .logout-button:hover {
-  background-color: #3a292d;
+  background-color: var(--hover);
+}
+
+/* =========================
+   Neumorphic 인터랙션
+========================= */
+
+.menu-button,
+.header-icon-button,
+.user-button {
+  transition: box-shadow 0.18s ease, background-color 0.18s ease;
+}
+
+.menu-button:hover,
+.header-icon-button:hover,
+.user-button:hover {
+  background-color: transparent;
+  box-shadow: var(--raised-sm);
+}
+
+.menu-button:active,
+.header-icon-button:active,
+.user-button:active {
+  box-shadow: var(--inset);
+}
+
+.notification-item:hover,
+.user-menu button:hover,
+.settings-dropdown button:hover,
+.user-dropdown button:hover {
+  background-color: transparent;
+  box-shadow: var(--inset);
+}
+
+.dropdown-header {
+  border-bottom-color: var(--line);
 }

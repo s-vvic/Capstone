@@ -9,10 +9,10 @@
   display: flex;
   flex-direction: column;
 
-  background-color: #25272C;
-  color: #BDD9D7;
+  background-color: var(--bg);
+  color: var(--accent);
 
-  border-right: 1px solid #34404b;
+  border-right: 1px solid var(--line);
   box-sizing: border-box;
 
   transform: translateX(-100%);
@@ -48,13 +48,13 @@
   align-items: center;
   justify-content: space-between;
 
-  border-bottom: 1px solid #34404b;
+  border-bottom: 1px solid var(--line);
   box-sizing: border-box;
 }
 
 .drawer-header strong {
   font-size: 20px;
-  color: #BDD9D7;
+  color: var(--accent);
 }
 
 .drawer-close {
@@ -65,15 +65,14 @@
   border-radius: 6px;
 
   background-color: transparent;
-  color: #BDD9D7;
+  color: var(--accent);
 
   font-size: 28px;
   cursor: pointer;
 }
 
 .drawer-close:hover {
-  background-color: rgba(255, 255, 255, 0.025);
-  border-color: #465d6d;
+  background-color: var(--hover);
 }
 
 .drawer-menu {
@@ -93,20 +92,19 @@
 
   border-radius: 7px;
 
-  color: #BDD9D7;
+  color: var(--accent);
   text-decoration: none;
 
   box-sizing: border-box;
 }
 
 .drawer-link:hover {
-  background-color: rgba(255, 255, 255, 0.025);
-  border-color: #465d6d;
+  background-color: var(--hover);
 }
 
 .drawer-link-active {
-  background-color: rgba(255, 255, 255, 0.025);
-  color: #BDD9D7;
+  background-color: var(--hover);
+  color: var(--accent);
   font-weight: bold;
 }
 
@@ -114,8 +112,9 @@
   margin: auto 15px 20px;
   padding: 12px;
 
-  border: 1px solid #34404b;
-  border-radius: 7px;
+  border: none;
+  box-shadow: var(--raised);
+  border-radius: var(--radius-lg);
 
   background-color: transparent;
   color: white;
@@ -124,9 +123,8 @@
 }
 
 .drawer-logout:hover {
-  background-color: rgba(255, 255, 255, 0.025);
-  border-color: #D97878;
-  color: #D97878;
+  background-color: var(--hover);
+  color: var(--danger);
 }
 
 .monitoring-menu-wrapper {
@@ -147,7 +145,7 @@
   border-radius: 7px;
 
   background-color: transparent;
-  color: #BDD9D7;
+  color: var(--accent);
 
   font: inherit;
   text-align: left;
@@ -173,11 +171,11 @@
   width: 250px;
   max-height: 360px;
 
-  background-color: #25272C;
-  border: 1px solid #34404b;
-  border-radius: 9px;
+  background-color: var(--bg);
+  border: none;
+  box-shadow: var(--raised);
+  border-radius: var(--radius-lg);
 
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
 
   overflow: hidden;
 
@@ -197,9 +195,9 @@
   width: 12px;
   height: 12px;
 
-  background-color: #102536;
-  border-left: 1px solid #34404b;
-  border-bottom: 1px solid #34404b;
+  background-color: var(--bg);
+  border-left: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
 
   transform: rotate(45deg);
 }
@@ -207,9 +205,9 @@
 .camera-popover-header {
   padding: 14px 16px;
 
-  border-bottom: 1px solid #34404b;
+  border-bottom: 1px solid var(--line);
 
-  color: #BDD9D7;
+  color: var(--accent);
   font-size: 14px;
   font-weight: bold;
 }
@@ -257,15 +255,14 @@
   border-radius: 6px;
 
   background-color: transparent;
-  color: #BDD9D7;
+  color: var(--accent);
 
   text-align: left;
   cursor: pointer;
 }
 
 .camera-popover-item:hover {
-  background-color: rgba(255, 255, 255, 0.025);
-  border-color: #465d6d;
+  background-color: var(--hover);
 }
 
 .camera-popover-status {
@@ -275,16 +272,65 @@
 }
 
 .camera-popover-status.online {
-  color: #6FBF9A;
+  color: var(--success);
 }
 .camera-popover-status.offline {
-  color: #D97878;
+  color: var(--danger);
 }
 
 .camera-empty {
   margin: 0;
   padding: 14px 10px;
 
-  color: #b4b4b4;
+  color: var(--text-muted);
   font-size: 13px;
+}
+
+/* =========================
+   Neumorphic 인터랙션
+========================= */
+
+.drawer-sidebar {
+  border-right: none;
+  box-shadow: 10px 0 30px rgba(0, 0, 0, 0.5);
+}
+
+.drawer-link,
+.monitoring-menu-button,
+.camera-popover-item,
+.drawer-close {
+  border-radius: var(--radius-md);
+  transition: box-shadow 0.18s ease;
+}
+
+.drawer-link:hover,
+.monitoring-menu-button:hover,
+.camera-popover-item:hover,
+.drawer-close:hover {
+  background-color: transparent;
+  box-shadow: var(--raised-sm);
+}
+
+.drawer-link-active,
+.drawer-link-active:hover {
+  background-color: transparent;
+  box-shadow: var(--inset);
+}
+
+.drawer-logout {
+  border: none;
+  box-shadow: var(--raised-sm);
+  border-radius: var(--radius-md);
+}
+
+.drawer-logout:hover {
+  background-color: transparent;
+}
+
+.drawer-logout:active {
+  box-shadow: var(--inset);
+}
+
+.camera-popover::before {
+  display: none;
 }

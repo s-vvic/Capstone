@@ -1,204 +1,591 @@
-.board-summary {
-    display: grid;
-    grid-template-columns: repeat(6, 1fr);
+/* =========================
+   한 화면 레이아웃
+   멀티뷰에서만 레이아웃을 뷰포트 높이로 고정해서
+   헤더 / 배너를 뺀 나머지 높이를 영상 그리드가 꽉 채우도록
+========================= */
 
+.main-layout:has(> .multiview) {
+  height: 100vh;
+
+  display: flex;
+  flex-direction: column;
+}
+
+.main-layout:has(> .multiview) > :not(.multiview) {
+  flex-shrink: 0;
+}
+
+/* 왼쪽: 툴바 + 영상 그리드 / 오른쪽: 채널 목록 (툴바 줄부터 아래 끝까지) */
+.multiview {
+  flex: 1;
+  min-height: 520px;
+
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 270px;
+  gap: 20px;
+
+  padding: 0 30px 24px;
+  box-sizing: border-box;
+
+  color: var(--accent);
+}
+
+.mv-main {
+  min-width: 0;
+  min-height: 0;
+
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+
+/* =========================
+   상단 툴바
+========================= */
+
+.mv-toolbar {
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.mv-stats {
+  display: flex;
+  gap: 12px;
+}
+
+.mv-stat {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  padding: 8px 16px 8px 8px;
+
+  box-shadow: var(--raised-sm);
+  border-radius: var(--radius-md);
+}
+
+.mv-stat-icon {
+  width: 30px;
+  height: 30px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  box-shadow: var(--inset);
+  border-radius: var(--radius-sm);
+
+  font-size: 14px;
+}
+
+.mv-stat.online .mv-stat-icon {
+  color: var(--success);
+}
+
+.mv-stat.offline .mv-stat-icon {
+  color: var(--danger);
+}
+
+.mv-stat-label {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.mv-stat strong {
+  font-size: 18px;
+  line-height: 1;
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+}
+
+.mv-stat strong small {
+  margin-left: 3px;
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+.mv-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* 화면 분할 선택 */
+.mv-layouts {
+  display: flex;
+  gap: 2px;
+
+  padding: 3px;
+
+  box-shadow: var(--inset);
+  border-radius: var(--radius-md);
+}
+
+.mv-layouts button {
+  height: 30px;
+
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  padding: 0 10px;
+
+  background: none;
+  color: var(--text-muted);
+
+  border: none;
+  border-radius: 9px;
+
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+
+.mv-layouts button:hover {
+  color: var(--accent);
+}
+
+.mv-layouts button.active {
+  background-color: var(--accent);
+  color: var(--bg);
+}
+
+/* 분할 모양 아이콘 */
+.mv-layout-icon {
+  width: 16px;
+  height: 12px;
+
+  display: grid;
+  grid-template-columns: repeat(var(--icon-cols), 1fr);
+  grid-template-rows: repeat(var(--icon-rows), 1fr);
+  gap: 1.5px;
+}
+
+.mv-layout-icon span {
+  background-color: currentColor;
+  border-radius: 1px;
+  opacity: 0.85;
+}
+
+.mv-tool-button {
+  height: 34px;
+
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  padding: 0 12px;
+
+  background: none;
+  color: var(--text-muted);
+
+  border: none;
+  box-shadow: var(--raised-sm);
+  border-radius: var(--radius-md);
+
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.mv-tool-button.icon-only {
+  width: 34px;
+  justify-content: center;
+  padding: 0;
+  font-size: 15px;
+}
+
+.mv-tool-button:hover:not(:disabled) {
+  color: var(--accent);
+}
+
+.mv-tool-button.active {
+  color: var(--accent);
+  box-shadow: var(--inset);
+}
+
+.mv-tool-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* 페이지 이동 */
+.mv-pager {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mv-pager button {
+  width: 30px;
+  height: 30px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0;
+
+  background: none;
+  color: var(--accent);
+
+  border: none;
+  box-shadow: var(--raised-sm);
+  border-radius: 9px;
+
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.mv-pager button:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.mv-pager-text {
+  min-width: 44px;
+
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.mv-pager-text strong {
+  color: #fff;
+  font-size: 14px;
+}
+
+
+/* =========================
+   영상 그리드
+========================= */
+
+.mv-grid {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+
+  display: grid;
+  grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
+  grid-template-rows: repeat(var(--rows), minmax(0, 1fr));
+  gap: 16px;
+}
+
+/* 전체 화면일 때 */
+.mv-grid:fullscreen {
+  padding: 20px;
+  gap: 16px;
+
+  background-color: var(--bg);
+  box-sizing: border-box;
+}
+
+.mv-empty-slot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  min-height: 0;
+
+  border: 1px dashed rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-lg);
+
+  color: rgba(155, 164, 172, 0.45);
+  font-size: 12px;
+}
+
+.mv-empty-slot svg {
+  font-size: 22px;
+}
+
+
+/* =========================
+   채널 목록
+========================= */
+
+.mv-panel {
+  min-height: 0;
+
+  display: flex;
+  flex-direction: column;
+
+  padding: 16px;
+  box-sizing: border-box;
+
+  box-shadow: var(--raised);
+  border-radius: var(--radius-lg);
+}
+
+.mv-panel-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+
+  margin-bottom: 12px;
+}
+
+.mv-panel-header h3 {
+  margin: 0;
+  font-size: 15px;
+}
+
+.mv-panel-header span {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.mv-search {
+  height: 34px;
+
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  padding: 0 10px;
+  margin-bottom: 10px;
+
+  box-shadow: var(--inset);
+  border-radius: var(--radius-md);
+
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+.mv-search:focus-within {
+  box-shadow: var(--inset), 0 0 0 1px var(--accent-ring);
+}
+
+.mv-search input {
+  flex: 1;
+  min-width: 0;
+
+  padding: 0;
+
+  background: none;
+  color: var(--accent);
+
+  border: none;
+  outline: none;
+
+  font-size: 12px;
+}
+
+.mv-search input::placeholder {
+  color: var(--text-muted);
+}
+
+.mv-search button {
+  display: flex;
+  padding: 0;
+
+  background: none;
+  color: var(--text-muted);
+  border: none;
+
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.mv-search button:hover {
+  color: var(--accent);
+}
+
+.mv-filters {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  padding-bottom: 12px;
+  margin-bottom: 6px;
+
+  border-bottom: 1px solid var(--line);
+}
+
+.mv-segment {
+  flex: 1;
+
+  display: flex;
+  gap: 2px;
+
+  padding: 3px;
+
+  box-shadow: var(--inset);
+  border-radius: var(--radius-sm);
+}
+
+.mv-segment button {
+  flex: 1;
+
+  padding: 5px 0;
+
+  background: none;
+  color: var(--text-muted);
+
+  border: none;
+  border-radius: 7px;
+
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.mv-segment button.active {
+  background-color: var(--accent);
+  color: var(--bg);
+  font-weight: 600;
+}
+
+.mv-channel-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+
+  margin: 0 -6px 0 0;
+  padding: 0 6px 0 0;
+
+  list-style: none;
+}
+
+.mv-channel-list li + li {
+  border-top: 1px solid var(--line);
+}
+
+.mv-channel-list button {
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  padding: 8px 6px;
+
+  background: none;
+  color: var(--accent);
+
+  border: none;
+  border-radius: 8px;
+
+  text-align: left;
+  cursor: pointer;
+}
+
+.mv-channel-list button:hover {
+  background-color: var(--hover);
+}
+
+/* 지금 화면에 나오고 있는 채널 */
+.mv-channel-list button.on-screen {
+  background-color: rgba(189, 217, 215, 0.06);
+}
+
+.mv-channel-list button.on-screen .mv-channel-no {
+  color: var(--accent);
+}
+
+.mv-channel-dot {
+  width: 7px;
+  height: 7px;
+  flex-shrink: 0;
+  border-radius: 50%;
+}
+
+.mv-channel-dot.online {
+  background-color: var(--success);
+}
+
+.mv-channel-dot.offline {
+  background-color: var(--danger);
+}
+
+.mv-channel-main {
+  flex: 1;
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.mv-channel-main strong {
+  font-size: 13px;
+  font-weight: 600;
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mv-channel-main small {
+  font-size: 11px;
+  color: var(--text-muted);
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mv-channel-no {
+  flex-shrink: 0;
+
+  font-size: 10px;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.mv-channel-empty {
+  padding: 24px 0;
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+
+/* =========================
+   세로가 짧은 화면 (노트북 등)
+========================= */
+
+@media (max-height: 760px) {
+  .multiview {
+    padding-bottom: 16px;
+  }
+
+  .mv-main {
     gap: 12px;
-    margin: 0 30px 25px;
+  }
 
-    box-sizing: border-box;
+  .mv-stat {
+    padding: 6px 12px 6px 6px;
+  }
+
+  .mv-stat-icon {
+    width: 26px;
+    height: 26px;
+  }
+
+  .mv-grid {
+    gap: 12px;
+  }
 }
 
-.summary-card {
-    min-height: 100px;
+/* 보드 목록 출처 (서버 / 목업) — 좁은 패널이라 줄바꿈 허용 */
+.mv-source {
+  margin: -4px 0 12px;
 
-    display: flex;
-    align-items: baseline;
-    justify-content: center;
-
-    gap: 5px;
-    
-    padding: 20px 12px;
-
-    background-color: #25272C;
-    border: 1px solid #34404b;
-    border-radius: 8px;
-
-    box-sizing: border-box;
+  align-items: flex-start;
+  white-space: normal;
+  font-size: 11px;
+  line-height: 1.4;
 }
 
-.summary-title {
-    position: absolute;
-}
-
-.summary-card {
-    position: relative;
-}
-
-.summary-title {
-    top: 15px;
-    left: 15px;
-
-    color: #BDD9D7;
-    font-size: 13px;
-}
-
-.summary-value {
-    margin-top: 22px;
-
-    color: #BDD9D7;
-    font-size: 28px;
-    font-weight: 700;
-}
-
-.summary-unit {
-    color: #b8c0c8;
-    font-size: 13px;
-}
-
-.summary-card.online .summary-value {
-    color: #6FBF9A;
-}
-
-.summary-card.offline .summary-value {
-    color: #D97878;
-}
-
-.summary-card.vpn .summary-value {
-    color: #60a5fa;
-}
-
-.summary-card.event .summary-value {
-    color: #D6A85F;
-}
-
-.summary-card.alert .summary-value {
-    color: #D6A85F;
-}
-
-.camera-list {
-    display: grid;
-    gap: 15px;
-    width: 100%;
-    box-sizing: border-box;
-}
-
-.channel-selector {
-    display: flex;
-    justify-content: flex-end;
-    gap: 8px;
-    margin: 20px 30px;
-}
-
-.channel-selector button {
-    padding: 8px, 16px;
-    border: 1px solid #BDD9D7;
-    border-radius: 5px;
-    background-color: transparent;
-    color: #BDD9D7;
-    cursor: pointer;
-}
-
-.channel-selector button:hover {
-  background-color: #1b2f3d;
-}
-
-.channel-selector button.active {
-    background-color: #BDD9D7;
-    color: #25272C;
-}
-
-.multiview-toolbar {
-    display: flex;
-    align-items: center;
-
-    gap: 10px;
-
-    margin: 20px 30px;
-}
-
-.channel-selector {
-    display: flex;
-    gap: 8px;
-
-    margin: 0;
-}
-
-.channel-selector button {
-    padding: 8px 16px;
-
-    border: 1px solid #BDD9D7;
-    border-radius: 5px;
-
-    background-color: transparent;
-    color: #BDD9D7;
-
-    cursor: pointer;
-}
-
-.channel-selector button:hover {
-  background-color: #1b2f3d;
-}
-
-.channel-selector button.active {
-    background-color: #BDD9D7;
-    color: #25272C;
-}
-
-
-/* 검색창 */
-
-.camera-search {
-    margin-left: 15px;
-}
-
-.camera-search input {
-    width: 200px;
-    height: 36px;
-
-    padding: 0 12px;
-
-    box-sizing: border-box;
-
-    background-color: #25272C;
-    color: #BDD9D7;
-
-    border: 1px solid #34404b;
-    border-radius: 5px;
-
-    outline: none;
-}
-
-.camera-search input::placeholder {
-    color: #8d949c;
-}
-
-.camera-search input:focus {
-    border-color: #BDD9D7;
-}
-
-
-/* 온라인 / 즐겨찾기 필터 */
-
-.filter-button {
-    height: 36px;
-
-    padding: 0 13px;
-
-    border: 1px solid #34404b;
-    border-radius: 5px;
-
-    background-color: transparent;
-    color: #b8c0c8;
-
-    cursor: pointer;
-}
-
-.filter-button:hover {
-  background-color: rgba(255, 255, 255, 0.025);
-}
-
-.filter-button.active {
-  background-color: #34404b;
-    border-color: #34404b;
-    color: #BDD9D7;
+.mv-source .camera-source-dot {
+  margin-top: 4px;
 }

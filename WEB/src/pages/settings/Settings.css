@@ -1,11 +1,32 @@
+/* =========================
+   한 화면 레이아웃
+   설정에서만 레이아웃을 뷰포트 높이로 고정하고
+   내용이 길면 오른쪽 설정 영역 안에서만 스크롤 (페이지 전체는 스크롤 없음)
+========================= */
+
+.main-layout:has(> .settings-page) {
+  height: 100vh;
+
+  display: flex;
+  flex-direction: column;
+}
+
+.main-layout:has(> .settings-page) > :not(.settings-page) {
+  flex-shrink: 0;
+}
 
 .settings-page {
+  flex: 1;
+  min-height: 0;
+
   display: grid;
-  grid-template-columns: 220px 1fr;
+  grid-template-columns: 220px minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
 
   gap: 25px;
 
-  margin: 20px 30px 40px;
+  padding: 0 30px 20px;
+  box-sizing: border-box;
 }
 
 .settings-menu {
@@ -14,10 +35,11 @@
 
   padding: 10px;
 
-  background-color: #25272C;
+  background-color: var(--bg);
 
-  border: 1px solid #34404b;
-  border-radius: 8px;
+  border: none;
+  box-shadow: var(--raised);
+  border-radius: var(--radius-lg);
 
   align-self: start;
 }
@@ -25,39 +47,66 @@
 .settings-menu-item {
   padding: 13px 15px;
 
-  color: #b8c0c8;
+  color: var(--text-muted);
   text-decoration: none;
 
   border-radius: 5px;
 }
 
 .settings-menu-item:hover {
-  background-color: rgba(255, 255, 255, 0.025);
-  border-color: #465d6d;
-  color: #BDD9D7;
+  background-color: var(--hover);
+  color: var(--accent);
 }
 
 .settings-menu-item.active {
-  background-color: rgba(255, 255, 255, 0.025) ;
-  color: #BDD9D7;
+  background-color: var(--hover) ;
+  color: var(--accent);
 
   font-weight: 600;
 }
 
+/* 설정 영역: 남는 높이를 채우고, 넘치는 내용은 이 안에서만 스크롤 */
 .settings-content {
-  min-height: 500px;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 
-  padding: 25px;
+  padding: 0 25px 25px;
 
-  background-color: #25272C;
+  background-color: var(--bg);
 
-  border: 1px solid #34404b;
-  border-radius: 8px;
+  border: none;
+  box-shadow: var(--raised);
+  border-radius: var(--radius-lg);
+
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.12) transparent;
 }
 
-.settings-section h2 {
-  margin-top: 0;
-  margin-bottom: 25px;
+.settings-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.settings-content::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.12);
+  border-radius: 4px;
+}
+
+.settings-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* 제목은 스크롤해도 위에 고정 (어떤 설정인지 항상 보이게) */
+.settings-section > h2 {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+
+  margin: 0 0 15px;
+  padding: 22px 0 14px;
+
+  background-color: var(--bg);
+  border-bottom: 1px solid var(--line);
 
   font-size: 20px;
 }
@@ -71,13 +120,13 @@
 
   padding: 15px 5px;
 
-  border-bottom: 1px solid #35404b;
+  border-bottom: 1px solid var(--line);
 }
 
 .setting-card p {
   margin: 5px 0 0;
 
-  color: #8e98a4;
+  color: var(--text-muted);
   font-size: 12px;
 }
 
@@ -90,7 +139,7 @@
 }
 
 .account-field label {
-  color: #BDD9D7;
+  color: var(--accent);
   font-size: 13px;
 }
 
@@ -98,11 +147,12 @@
 .setting-card select {
   padding: 9px 10px;
 
-  background-color: rgba(255, 255, 255, 0.025);
-  color: #BDD9D7;
+  background-color: var(--hover);
+  color: var(--accent);
 
-  border: 1px solid #495460;
-  border-radius: 5px;
+  border: none;
+  box-shadow: var(--inset);
+  border-radius: var(--radius-md);
 }
 
 .settings-button,
@@ -118,14 +168,16 @@
 
 .settings-button {
   background-color: transparent;
-  color: #BDD9D7;
+  color: var(--accent);
 
-  border: 1px solid #BDD9D7;
+  border: none;
+  box-shadow: var(--raised-sm);
 }
 
 .danger-button {
   background-color: transparent;
-  color: #D97878;
+  color: var(--danger);
 
-  border: 1px solid #D97878;
+  border: none;
+  box-shadow: var(--raised-sm);
 }

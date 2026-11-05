@@ -71,7 +71,7 @@ class CDP {
       returnByValue: true,
       awaitPromise: true,
     });
-    if (result.exceptionDetails) throw new Error(result.exceptionDetails.text);
+    if (result.exceptionDetails) throw new Error(result.exceptionDetails.exception?.description || result.exceptionDetails.text);
     return result.result?.value;
   }
 }
@@ -205,24 +205,35 @@ test(
         );
       });
       const cdp = new CDP(ws);
+      const pageErrors = [];
+      ws.addEventListener("message", (event) => { const data = JSON.parse(String(event.data)); if (data.method === "Runtime.exceptionThrown") pageErrors.push(data.params.exceptionDetails.exception?.description || data.params.exceptionDetails.text); });
+      await cdp.send("Runtime.enable");
+      await cdp.send("Emulation.setDeviceMetricsOverride", { width: 1440, height: 1000, deviceScaleFactor: 1, mobile: false });
       console.log("Browser CDP connected");
       const text = () => cdp.evaluate("document.body.innerText");
       const has = (needle) =>
         until(async () => (await text()).includes(needle), needle);
-      const click = (label) =>
-        cdp.evaluate(
+      const click = async (label) => {
+        await until(() => cdp.evaluate(`(()=>{const button=[...document.querySelectorAll('button')].find(b=>b.getAttribute('aria-label')===${JSON.stringify(label)}||b.textContent.trim()===${JSON.stringify(label)});return !!button && !button.disabled;})()`), label);
+        return cdp.evaluate(
           `(()=>{const button=[...document.querySelectorAll('button')].find(b=>b.getAttribute('aria-label')===${JSON.stringify(label)}||b.textContent.trim()===${JSON.stringify(label)});if(!button||button.disabled)throw new Error('Button unavailable');button.click();})()`,
         );
+      };
       await cdp.send("Page.navigate", { url: base + "/login" });
-      await has("WEBCAM Login");
+      await has("LOGIN");
       await cdp.evaluate(
-        `(()=>{const inputs=document.querySelectorAll('form input');const setter=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set;setter.call(inputs[0],'browser-vpn@example.com');inputs[0].dispatchEvent(new Event('input',{bubbles:true}));setter.call(inputs[1],'VpnTest!2026');inputs[1].dispatchEvent(new Event('input',{bubbles:true}));})()`,
+        `(()=>{const inputs=[document.querySelector('input[aria-label="이메일"]'),document.querySelector('input[aria-label="비밀번호"]')];const setter=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set;setter.call(inputs[0],'browser-vpn@example.com');inputs[0].dispatchEvent(new Event('input',{bubbles:true}));setter.call(inputs[1],'VpnTest!2026');inputs[1].dispatchEvent(new Event('input',{bubbles:true}));})()`,
       );
-      await click("로그인");
+      await click("LOGIN");
       await until(
         () => cdp.evaluate("location.pathname==='/dashboard'"),
         "login and VPN check",
       );
+      assert.equal(await cdp.evaluate("!!sessionStorage.getItem('accessToken') && !localStorage.getItem('accessToken')"), true);
+      for (const [route, selector] of [["/reports", ".reports-page"], ["/settings/storage", ".settings-content h2"], ["/settings/privacy-zones", ".pz-settings-page"], ["/devices", ".device-manage"], ["/event-logs", ".event-page"]]) {
+        await cdp.send("Page.navigate", { url: base + route });
+        await until(() => cdp.evaluate(`!!document.querySelector(${JSON.stringify(selector)})`), route);
+      }
       await cdp.send("Page.navigate", { url: base + "/vpn-manage" });
       await has("Browser camera");
       assert.equal((await text()).includes("Foreign camera"), false);
@@ -234,6 +245,11 @@ test(
           ),
         "inventory ready",
       );
+      await click("Browser camera 상세 정보");
+      await has("Device VPN 상세");
+      assert.equal((await text()).includes("2026-08-09"), false);
+      await click("닫기");
+      if (process.env.WEB_TEST_SCREENSHOT) { const screenshot = await cdp.send("Page.captureScreenshot", { format: "png" }); fs.writeFileSync(process.env.WEB_TEST_SCREENSHOT, Buffer.from(screenshot.data, "base64")); }
       await click("Browser camera 연결 해제");
       await has("연결 해제 요청을 처리했습니다.");
       await until(
@@ -290,13 +306,14 @@ test(
         "timeout recovered",
       );
       await cdp.evaluate(
-        "fetch('/v1/auth/logout',{method:'POST',headers:{Authorization:'Bearer '+localStorage.getItem('accessToken')}}).then(r=>r.status)",
+        "fetch('/v1/auth/logout',{method:'POST',headers:{Authorization:'Bearer '+(localStorage.getItem('accessToken')||sessionStorage.getItem('accessToken'))}}).then(r=>r.status)",
       );
       await click("새로고침");
       await until(
         () => cdp.evaluate("location.pathname==='/login'"),
         "revoked token redirects to login",
       );
+      assert.deepEqual(pageErrors, []);
     } finally {
       ws?.close();
       browser.kill();

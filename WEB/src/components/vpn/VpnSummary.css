@@ -1,100 +1,239 @@
 /* =========================
-   요약
+   요약 바: Client VPN | 카메라 VPN 상태 | 새로고침
+   (영역 구분은 배경 위 세로 구분선)
 ========================= */
 
-.vpn-summary-section {
-  padding: 18px;
-
-  background-color: #25272C;
-
-  border: 1px solid #34404b;
-  border-radius: 8px;
-}
-
-.vpn-summary-section h2 {
-  margin: 0 0 18px;
-
-  font-size: 18px;
-}
-
-.vpn-summary {
+.vpn-summary-bar {
   display: grid;
+  grid-template-columns: minmax(260px, 1.1fr) minmax(0, 2.4fr) auto;
+  align-items: center;
 
-  grid-template-columns:
-    repeat(4, minmax(150px, 1fr))
-    190px;
+  padding: 14px 20px;
 
-  gap: 15px;
+  background-color: var(--bg);
+  color: var(--accent);
+
+  border: none;
+  box-shadow: var(--raised);
+  border-radius: var(--radius-lg);
 }
 
-.vpn-summary-card,
-.vpn-refresh-card {
-  min-height: 95px;
-
-  padding: 16px;
-
-  background-color: #25272C;
-
-  border: 1px solid #34404b;
-  border-radius: 7px;
-
-  box-sizing: border-box;
+.vpn-summary-bar > * + * {
+  border-left: 1px solid var(--line);
 }
 
-.vpn-summary-card {
+
+/* Client VPN (이 PC) */
+
+.vpn-peer {
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  gap: 14px;
 
-  gap: 10px;
+  min-width: 0;
+  padding-right: 20px;
 }
 
-.vpn-summary-card span {
-  color: #aeb7c2;
+.vpn-peer-icon {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
 
-  font-size: 13px;
-}
-
-.vpn-summary-card strong {
-  font-size: 26px;
-}
-
-.vpn-summary-card small {
-  font-size: 12px;
-
-  font-weight: 400;
-}
-
-.vpn-summary-card.connected strong {
-  color: #6FBF9A;
-}
-
-.vpn-summary-card.disconnected strong {
-  color: #D97878;
-}
-
-.vpn-summary-card.error strong {
-  color: #D6A85F;
-}
-
-.vpn-refresh-card {
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
 
+  box-shadow: var(--raised-sm);
+  border-radius: 50%;
+
+  font-size: 18px;
+  color: var(--text-muted);
+}
+
+.vpn-peer-text {
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.vpn-peer-caption {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.vpn-peer-label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+
+  font-size: 15px;
+}
+
+.vpn-peer-message {
+  font-size: 11px;
+  color: var(--text-muted);
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.vpn-peer.connected .vpn-peer-icon,
+.vpn-peer.connected .vpn-peer-label {
+  color: var(--success);
+}
+
+.vpn-peer.connecting .vpn-peer-icon,
+.vpn-peer.connecting .vpn-peer-label {
+  color: var(--warning);
+}
+
+.vpn-peer.disconnected .vpn-peer-icon,
+.vpn-peer.disconnected .vpn-peer-label,
+.vpn-peer.error .vpn-peer-icon,
+.vpn-peer.error .vpn-peer-label {
+  color: var(--danger);
+}
+
+.vpn-peer-spinner {
+  width: 12px;
+  height: 12px;
+
+  border: 2px solid rgba(214, 168, 95, 0.3);
+  border-top-color: var(--warning);
+  border-radius: 50%;
+
+  animation: vpn-peer-spin 0.7s linear infinite;
+}
+
+@keyframes vpn-peer-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+
+/* 카메라 VPN 상태 */
+
+.vpn-summary-stats {
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
   gap: 8px;
 
-  padding: 14px;
+  padding: 0 20px;
+}
 
-  background-color: #25272C;
+.vpn-summary-caption {
+  font-size: 11px;
+  color: var(--text-muted);
+}
 
-  border: 1px solid #34404b;
-  border-radius: 7px;
+.vpn-summary-items {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+/* 아이콘 + (라벨 위, 숫자 아래)를 한 덩어리로 붙여서 읽히게 */
+.vpn-summary-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  padding: 0 18px;
+}
+
+.vpn-summary-item:first-child {
+  padding-left: 0;
+}
+
+.vpn-summary-item + .vpn-summary-item {
+  border-left: 1px solid var(--line);
+}
+
+.vpn-summary-item-icon {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  box-shadow: var(--inset);
+  border-radius: var(--radius-sm);
+
+  font-size: 16px;
+  color: var(--accent);
+}
+
+.vpn-summary-item-text {
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.vpn-summary-item-label {
+  font-size: 12px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.vpn-summary-item strong {
+  font-size: 24px;
+  line-height: 1;
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+}
+
+.vpn-summary-item strong small {
+  margin-left: 3px;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+.vpn-summary-item.connected .vpn-summary-item-icon,
+.vpn-summary-item.connected strong {
+  color: var(--success);
+}
+
+.vpn-summary-item.disconnected .vpn-summary-item-icon,
+.vpn-summary-item.disconnected strong {
+  color: var(--danger);
+}
+
+.vpn-summary-item.error .vpn-summary-item-icon,
+.vpn-summary-item.error strong {
+  color: var(--warning);
+}
+
+
+/* 새로고침 */
+
+.vpn-refresh {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+
+  padding-left: 20px;
+}
+
+.vpn-refresh small {
+  color: var(--text-muted);
+  font-size: 11px;
+  white-space: nowrap;
 }
 
 .refresh-icon-wrapper {
-  width: 24px;
-  height: 24px;
+  width: 18px;
+  height: 18px;
 
   display: inline-flex;
   align-items: center;
@@ -105,12 +244,13 @@
   transform-origin: 50% 50%;
 }
 
-.refresh-icon {
-  width: 22px;
-  height: 22px;
+/* .refresh-icon 은 다른 화면과 겹쳐 이름을 따로 씀 */
+.vpn-refresh-icon {
+  width: 16px;
+  height: 16px;
 
   display: block;
-  color: #BDD9D7;
+  color: var(--accent);
 }
 
 .refresh-icon-wrapper.spinning {
@@ -135,30 +275,23 @@
 
   gap: 7px;
 
-  padding: 8px 14px;
+  padding: 7px 14px;
 
   background-color: transparent;
-  color: #BDD9D7;
+  color: var(--accent);
 
-  border: 1px solid #BDD9D7;
-  border-radius: 6px;
+  border: none;
+  box-shadow: var(--raised-sm);
+  border-radius: var(--radius-md);
 
   font-size: 13px;
   font-weight: 600;
- 
+
   cursor: pointer;
 
   transition: 0.2s;
 }
 
 .vpn-refresh-button:hover {
-  background-color: rgba(255, 255, 255, 0.025);
-  border-color: #34404b;
-}
-
-.vpn-refresh-card span,
-.vpn-refresh-card small {
-  color: #89939f;
-
-  font-size: 11px;
+  background-color: var(--hover);
 }

@@ -1,242 +1,563 @@
-.login-page {
+/* 로그인 / 회원가입 / 비밀번호 찾기 공통 카드 */
+
+.auth-page {
   width: 100%;
-  min-height: 100vh;
-
-  display: flex;
-  justify-content: center;
-  align-items: center;
-
-  background-color: #25272C;
-
-  color: #BDD9D7;
-
-  box-sizing: border-box;
-}
-
-
-/* 전체 로그인 영역 */
-.login-container {
-  width: 620px;
+  max-width: 460px;
 
   display: flex;
   flex-direction: column;
   align-items: center;
+
+  color: var(--accent);
+}
+
+
+.auth-form {
+  position: relative;
+
+  width: 100%;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+
+/* 카드 위에 걸친 보안 배지 */
+.auth-badge {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  z-index: 2;
+
+  width: 74px;
+  height: 74px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  transform: translateX(-50%);
+
+  color: var(--bg);
+  background-color: var(--accent);
+
+  border-radius: 50%;
+  box-shadow: var(--raised);
+}
+
+
+/* 아이콘이 배지 전체를 덮는다 (여백은 SVG 좌표에 포함) */
+.auth-badge-icon {
+  width: 100%;
+  height: 100%;
+}
+
+
+/* 카드 */
+.auth-card {
+  position: relative;
+  z-index: 1;
+
+  width: 100%;
+
+  margin-top: 37px;
+  padding: 53px 28px 26px;
+
+  box-sizing: border-box;
+
+  background-color: var(--bg);
+
+  border-radius: var(--radius-lg);
+  box-shadow: var(--raised);
 }
 
 
 /* 제목 */
-.login-title {
-  margin: 0 0 45px;
+.auth-title {
+  margin: 0 0 6px;
 
-  color: #BDD9D7;
+  text-align: center;
 
-  font-size: 48px;
+  color: var(--accent);
+
+  font-size: 22px;
   font-weight: 700;
-  letter-spacing: 1px;
+  letter-spacing: 0.5px;
+
+  animation: auth-fade-in 0.25s ease;
 }
 
 
-/* 로그인 카드 */
-.login-card {
-  width: 620px;
+/* 접고 펼치는 영역 */
+.auth-collapse {
+  display: grid;
+  grid-template-rows: 0fr;
 
-  display: flex;
-  flex-direction: column;
-
-  box-sizing: border-box;
-
-  padding: 0;
-  background-color: transparent;
-  border: none;
-}
-
-
-/* 입력창 영역 */
-.login-inputs {
-  width: 100%;
-
-  display: flex;
-  flex-direction: column;
-
-  gap: 18px;
-}
-
-
-/* 공통 input */
-.login-input {
-  width: 100%;
-  height: 62px;
-
-  padding: 0 20px;
-
-  box-sizing: border-box;
-
-  color: #BDD9D7;
-
-  font-size: 16px;
-
-  background-color: transparent;
-
-  border: 1px solid #34404b;
-  border-radius: 10px;
-
-  outline: none;
+  opacity: 0;
 
   transition:
-    border-color 0.2s ease,
-    box-shadow 0.2s ease;
+    grid-template-rows 0.32s ease,
+    opacity 0.14s ease;
 }
 
 
-.login-input::placeholder {
-  color: #8d949c;
+.auth-collapse.is-open {
+  grid-template-rows: 1fr;
+
+  opacity: 1;
+
+  transition:
+    grid-template-rows 0.32s ease,
+    opacity 0.22s ease 0.1s;
 }
 
 
-.login-input:focus {
-  border-color: #BDD9D7;
+/* 좌우 여백을 둬서 포커스 테두리가 잘리지 않게 한다 */
+.auth-collapse-inner {
+  min-height: 0;
 
-  box-shadow: 0 0 0 1px #BDD9D7;
-}
+  margin: 0 -8px;
+  padding: 0 8px;
 
-/* 비밀번호 영역 */
-.login-password-box {
-  position: relative;
-
-  width: 100%;
+  overflow: hidden;
 }
 
 
-.login-password-box .login-input {
-  padding-right: 55px;
+.auth-collapse-body {
+  padding-top: 16px;
+}
+
+.auth-collapse-body.is-tight {
+  padding-top: 8px;
+}
+
+.auth-collapse-body.is-hint {
+  padding-top: 6px;
+}
+
+.auth-collapse-body.is-message {
+  padding-top: 14px;
+}
+
+.auth-collapse-body.is-options {
+  padding: 18px 0 4px;
 }
 
 
-/* 비밀번호 보기 */
+/* 입력 칸 (눌린 면) */
+.auth-field {
+  height: 62px;
+
+  display: flex;
+  align-items: center;
+
+  padding: 0 8px 0 20px;
+
+  box-sizing: border-box;
+
+  border-radius: var(--radius-md);
+  box-shadow: var(--inset);
+
+  transition: box-shadow 0.2s ease;
+}
+
+
+.auth-field:focus-within {
+  box-shadow: var(--inset), inset 0 0 0 1px var(--accent-ring);
+}
+
+
+.auth-field.is-invalid {
+  box-shadow: var(--inset), inset 0 0 0 1px var(--danger);
+}
+
+
+.auth-field-icon {
+  flex-shrink: 0;
+
+  display: flex;
+
+  margin-right: 14px;
+
+  color: var(--accent);
+
+  font-size: 15px;
+}
+
+
+.auth-input {
+  flex: 1;
+  min-width: 0;
+  height: 40px;
+
+  padding: 0 10px 0 0;
+
+  color: var(--accent);
+  background-color: transparent;
+
+  border: none;
+  outline: none;
+
+  font-size: 16px;
+}
+
+
+.auth-input:focus-visible {
+  outline: none;
+}
+
+
+.auth-input::placeholder {
+  color: var(--text-muted);
+}
+
+
+/* 브라우저 자동완성 배경색이 다크 톤을 깨지 않도록 */
+.auth-input:-webkit-autofill,
+.auth-input:-webkit-autofill:hover,
+.auth-input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--accent);
+  -webkit-box-shadow: 0 0 0 1000px var(--bg) inset;
+  caret-color: var(--accent);
+  transition: background-color 9999s ease-out 0s;
+}
+
+
+/* 입력 칸 안쪽 버튼 (비밀번호 보기) */
 .eye-button {
-  position: absolute;
+  flex-shrink: 0;
 
-  top: 50%;
-  right: 18px;
-
-  transform: translateY(-50%);
-
-  width: 34px;
   height: 34px;
 
   display: flex;
   align-items: center;
   justify-content: center;
 
-  padding: 0;
+  padding: 0 12px;
 
-  color: #b8c0c8;
+  color: var(--accent);
   background: transparent;
 
   border: none;
-
-  font-size: 16px;
+  border-radius: var(--radius-sm);
 
   cursor: pointer;
+}
+
+
+.eye-button {
+  width: 34px;
+
+  padding: 0;
+
+  color: var(--text-muted);
+
+  font-size: 16px;
 }
 
 
 .eye-button:hover {
-  color: #BDD9D7;
+  color: var(--accent);
 }
 
 
-/* 로그인 버튼 */
-.login-button {
-  width: 100%;
-  height: 62px;
+.eye-button:active:not(:disabled),
+.auth-link:active:not(:disabled) {
+  box-shadow: none;
+}
 
-  margin-top: 28px;
 
+/* 안내 / 오류 문구 */
+.auth-guide {
+  margin: 0;
+
+  text-align: center;
+
+  color: var(--text-muted);
+
+  font-size: 13px;
+  line-height: 1.5;
+
+  animation: auth-fade-in 0.25s ease;
+  transform: translateY(-9px);
+}
+
+
+.auth-hint {
+  margin: 0;
+  padding-left: 8px;
+
+  color: var(--text-muted);
+
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+
+.auth-hint.is-error {
+  color: var(--danger);
+}
+
+
+.auth-message {
+  margin: 0;
+
+  color: var(--accent);
+
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+
+.auth-message.is-error {
+  color: var(--danger);
+}
+
+
+/* 로그인 상태 유지 + 비밀번호 찾기 */
+.auth-options {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
 
-  color: #25272C;
+  gap: 10px 12px;
+}
 
-  font-size: 17px;
-  font-weight: 700;
 
-  background-color: #BDD9D7;
+.remember-me {
+  position: relative;
 
-  border-radius: 8px;
-  border: none;
+  display: inline-flex;
+  align-items: center;
+
+  gap: 8px;
+
+  color: var(--text-muted);
+
+  font-size: 13px;
 
   cursor: pointer;
+  user-select: none;
 
-  transition:
-    background-color 0.2s
-    transform 0.1s;
+  transition: color 0.18s ease;
 }
 
 
-.login-button:hover {
-  background-color: #9FC5C4;
+.remember-me:hover {
+  color: var(--accent);
 }
 
 
-.login-button:active {
-  transform: translateY(1px);
+/* 실제 체크박스는 숨기고 키보드 / 스크린리더용으로만 둔다 */
+.remember-me input {
+  position: absolute;
+
+  width: 1px;
+  height: 1px;
+
+  margin: 0;
+
+  opacity: 0;
+  pointer-events: none;
 }
 
 
-.login-button:focus {
-  outline: none;
-}
-
-
-/* 계정 관련 링크 */
-.account-links {
-  margin-top: 28px;
+.remember-box {
+  width: 18px;
+  height: 18px;
 
   display: flex;
   align-items: center;
   justify-content: center;
 
-  gap: 14px;
+  color: transparent;
+
+  font-size: 10px;
+
+  border-radius: 5px;
+  box-shadow: var(--inset);
+
+  transition:
+    background-color 0.18s ease,
+    color 0.18s ease,
+    box-shadow 0.18s ease;
 }
 
 
-.account-link {
-  padding: 0;
+.remember-me input:checked + .remember-box {
+  color: var(--bg);
+  background-color: var(--accent);
 
-  color: #b8c0c8;
+  box-shadow: none;
+}
 
-  font-size: 14px;
 
+.remember-me input:focus-visible + .remember-box {
+  outline: 2px solid var(--accent-ring);
+  outline-offset: 2px;
+}
+
+
+.auth-find-links {
+  display: flex;
+  align-items: center;
+
+  gap: 6px;
+}
+
+
+.auth-link {
+  padding: 2px;
+
+  color: var(--accent);
   background: transparent;
 
   border: none;
+  border-radius: 4px;
+
+  font-size: 13px;
 
   cursor: pointer;
 }
 
 
-.account-link:hover {
-  color: #BDD9D7;
+.auth-link:hover {
   text-decoration: underline;
 }
 
 
-.divider {
-  color: #34404b;
-  font-size: 12px;
+/* 카드 밑에서 빠져나온 서랍 모양 버튼 (윗부분은 카드에 가려진다) */
+.auth-submit {
+  position: relative;
+  z-index: 0;
+
+  width: 72%;
+  height: 74px;
+
+  margin-top: -22px;
+  padding: 22px 16px 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color: var(--bg);
+  background-color: var(--accent);
+
+  border: none;
+  border-radius: 0 0 16px 16px;
+  box-shadow: var(--raised-sm);
+
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 2px;
+
+  cursor: pointer;
 }
 
-.login-error {
-  margin: 12px 0 0;
 
-  color: #BDD9D7;
-
-  font-size: 14px;
-  line-height: 1.4;
+.auth-submit:hover:not(:disabled) {
+  background-color: var(--accent-hover);
+  box-shadow: var(--raised);
 }
 
-.login-error-auth {
-  color: #D97878;
+
+.auth-submit:disabled {
+  opacity: 0.75;
+  cursor: default;
+}
+
+
+.auth-submit-label {
+  display: flex;
+  align-items: center;
+
+  gap: 10px;
+
+  animation: auth-fade-in 0.2s ease;
+}
+
+
+/* 회원가입 / 로그인으로 돌아가기 */
+.auth-switch {
+  margin-top: 22px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 6px;
+
+  color: var(--text-muted);
+
+  font-size: 13px;
+
+  animation: auth-fade-in 0.25s ease;
+}
+
+
+.auth-switch .auth-link {
+  font-weight: 700;
+}
+
+
+/* 로딩 */
+.auth-spinner {
+  width: 16px;
+  height: 16px;
+
+  box-sizing: border-box;
+
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+
+  animation: auth-spin 0.7s linear infinite;
+}
+
+
+@keyframes auth-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(2px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+
+@keyframes auth-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+
+@media (max-width: 480px) {
+  .auth-card {
+    padding: 51px 20px 22px;
+  }
+
+  .auth-submit {
+    width: 80%;
+  }
+}
+
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-collapse,
+  .auth-collapse.is-open {
+    transition: none;
+  }
+
+  .auth-title,
+  .auth-guide,
+  .auth-submit-label,
+  .auth-switch {
+    animation: none;
+  }
 }

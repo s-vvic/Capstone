@@ -15,6 +15,8 @@ import {
   normalizeConnections,
 } from "../src/api/vpnApi.js";
 import { apiClient, setAuthToken, getAuthToken } from "../src/api/client.js";
+import { saveSession, getAccessToken } from "../src/storage/authStorage.js";
+import { getCameras, registerCamera, updateCamera } from "../src/api/cameraApi.js";
 
 test("WEB client -> controller -> C1 session and C4 VPN lifecycle", async (t) => {
   setInMemoryDriver();
@@ -46,6 +48,9 @@ test("WEB client -> controller -> C1 session and C4 VPN lifecycle", async (t) =>
   const base = "http://127.0.0.1:" + server.address().port;
   const realFetch = globalThis.fetch;
   const originalStorage = globalThis.localStorage;
+  const originalSessionStorage = globalThis.sessionStorage;
+  const session = new Map();
+  globalThis.sessionStorage = { getItem: (key) => session.get(key) || null, setItem: (key, value) => session.set(key, String(value)), removeItem: (key) => session.delete(key) };
   const storage = new Map();
   globalThis.localStorage = {
     getItem: (key) => storage.get(key) || null,
@@ -62,6 +67,22 @@ test("WEB client -> controller -> C1 session and C4 VPN lifecycle", async (t) =>
     await login("web-vpn@example.com", "VpnTest!2026");
     const ownerToken = getAuthToken();
     assert.ok(ownerToken);
+    await t.test("remember-me and session-only login share the same API authentication", async () => {
+      saveSession(user.email, ownerToken, false);
+      assert.equal(storage.get("accessToken"), undefined);
+      assert.equal(getAccessToken(), ownerToken);
+      await loadVpnData();
+      saveSession(user.email, ownerToken, true);
+      assert.equal(session.get("accessToken"), undefined);
+      assert.equal(storage.get("accessToken"), ownerToken);
+    });
+    await t.test("new camera UI retains C2 MAC registration, list and rename", async () => {
+      const camera = await registerCamera({ mac: "00:1a:2b:3c:4d:5e", name: "UI camera", location: "Room" });
+      assert.equal(camera.mac, "001A2B3C4D5E");
+      assert.equal(camera.device_id, "001A2B3C4D5E");
+      await updateCamera(camera.mac, { name: "Renamed camera" });
+      assert.equal((await getCameras())[0].name, "Renamed camera");
+    });
     await t.test("empty inventory stays empty", async () => {
       const data = await loadVpnData();
       assert.deepEqual(data.devices, []);
@@ -217,6 +238,8 @@ test("WEB client -> controller -> C1 session and C4 VPN lifecycle", async (t) =>
     globalThis.fetch = realFetch;
     if (originalStorage === undefined) delete globalThis.localStorage;
     else globalThis.localStorage = originalStorage;
+    if (originalSessionStorage === undefined) delete globalThis.sessionStorage;
+    else globalThis.sessionStorage = originalSessionStorage;
     server.closeAllConnections();
     await new Promise((resolve) => server.close(resolve));
   }
