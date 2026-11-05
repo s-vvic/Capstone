@@ -147,3 +147,19 @@ JWT Bearer만 허용하며 `x-user-id` 우회를 제거했습니다. 기본 검�
 ```
 
 접근 로그 자체가 없다면 해당 요청이 이 프로세스까지 도달했는지, 실행 중인 서버 주소·포트와 재시작 여부를 확인합니다. `[REQUEST]`는 있지만 `[RESPONSE]`가 없다면 요청 처리가 아직 완료되지 않은 상태이며, 연결이 먼저 닫히면 `[ABORTED]`가 표시됩니다. 프로세스 관리자로 실행 중이면 해당 프로세스의 stdout·stderr 로그에서 확인합니다.
+
+## PostgreSQL 인증서 체인 오류 해결
+
+heartbeat 처리 중 `findByVpnIp`에서 `SELF_SIGNED_CERT_IN_CHAIN` / `self-signed certificate in certificate chain`이 발생하면, 보드 → API 연결 이후 서버 → PostgreSQL TLS 인증서 검증에서 실패한 것입니다. 이 오류만으로 보드 VPN 인증이나 MAC 검증이 완료되었다고 볼 수는 없습니다.
+
+C2는 `DB_SSL=true`일 때 인증서를 검증합니다. DB가 사설 CA 또는 기본 신뢰 저장소에 없는 인증서를 사용하면 DB 운영자·제공자가 배포한 신뢰할 CA PEM 또는 인증서 번들을 서버에 배치하고 다음과 같이 지정합니다.
+
+```dotenv
+DB_DRIVER=postgres
+DB_SSL=true
+DB_SSL_CA_FILE=/home/ubuntu/certs/database-ca.pem
+```
+
+위 경로는 예시이며 실제 CA 파일 경로로 바꿉니다. 이 파일은 Node.js 서버 프로세스가 읽을 수 있어야 하고 `DB_HOST`도 인증서의 서버 이름과 일치해야 합니다. CA 파일을 지정하지 않으면 Node.js 기본 신뢰 저장소를 사용합니다. 잘못된 파일 경로는 명시적 파일 읽기 오류로 처리하며 인증서 검증을 자동으로 우회하지 않습니다.
+
+단독 C2라면 C2 프로세스의 환경 설정에, 통합 controller라면 controller 프로세스가 로드하는 환경 설정에 추가한 뒤 해당 프로세스를 재시작합니다. 서버 인증서 체인이 불완전한 경우에는 DB 서버의 체인 구성도 함께 수정해야 합니다. 로컬 설정 테스트는 운영 DB와의 TLS 연결 성공을 보증하지 않으므로 배포 후 heartbeat를 다시 보내 로그로 확인합니다.
