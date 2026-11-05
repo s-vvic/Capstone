@@ -3,9 +3,13 @@ import { configureSecurityMiddleware } from './middleware/securityMiddleware.js'
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 import routes from './routes/index.js';
 import { env } from './config/env.js';
+import { deviceRequestLogger, deviceRequestErrorLogger } from '../../device-heartbeat/src/middleware/requestLogger.js';
 
 export function createControllerApp() {
   const app = express();
+
+  // Log C2 access before parsing; router-only logging would miss malformed JSON.
+  app.use(['/v1/devices', '/devices'], deviceRequestLogger);
 
   // JSON 및 URL-encoded 파서 (Base64 스냅샷 등 미디어 전송 고려 15MB 한도)
   app.use(express.json({ limit: '15mb' }));
@@ -40,6 +44,7 @@ export function createControllerApp() {
 
   // 404 및 ICD 8.0 표준 오류 핸들러
   app.use(notFoundHandler);
+  app.use(deviceRequestErrorLogger);
   app.use(errorHandler);
 
   return app;

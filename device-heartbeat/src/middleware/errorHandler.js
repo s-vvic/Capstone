@@ -1,5 +1,4 @@
 import { AppError } from "../errors/AppError.js";
-import { logger } from "../utils/logger.js";
 export function errorHandler(err, req, res, next) {
   let error = err;
   if (err.type === "entity.parse.failed")
@@ -9,7 +8,7 @@ export function errorHandler(err, req, res, next) {
   else if (err.code === "23505")
     error = AppError.conflict("Duplicate board or VPN IP");
   else if (!(err instanceof AppError)) {
-    logger.error("Unhandled request error", err);
+    // The request error observer logs the original cause and stack before conversion.
     error = AppError.internal("Internal server error");
   }
   const body = { error_code: error.code, message: error.message };

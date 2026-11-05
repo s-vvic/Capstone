@@ -119,3 +119,31 @@ JWT Bearer만 허용하며 `x-user-id` 우회를 제거했습니다. 기본 검�
 `npm test`는 MAC·소유권·JWT·TCP 출발지 인증, heartbeat 필수 필드와 0 값, 버전 분리·15초 경계·상태 전환, 폐지 경로와 오류 JSON을 검증합니다. PostgreSQL 회귀 테스트는 `C2_TEST_DATABASE_URL`이 지정된 격리 테스트 DB에서만 실행합니다. 실제 WireGuard·C1 세션·C6 트랜잭션·C7 영상·가용성은 해당 구성요소의 통합 환경에서 검증해야 합니다.
 
 이 문서는 UTF-8로 저장합니다.
+
+## API 접근·오류 콘솔 로그
+
+단독 C2와 통합 controller 모두 C2 요청을 콘솔에 출력합니다. 코드를 반영한 뒤 실제 요청을 받는 프로세스를 재시작합니다. 포트 3000의 통합 서버를 사용한다면 controller를 재시작해야 합니다.
+
+- `[C2][REQUEST]`: 접근 즉시 요청 ID, HTTP 메서드, 경로, TCP 출발지 IP를 출력합니다.
+- `[C2][RESPONSE]`: 응답 완료 시 HTTP 상태와 처리 시간(ms)을 출력합니다.
+- `[C2][REJECTED]`: 입력 오류·인증 실패 등 4xx 사유를 출력합니다.
+- `[C2][ERROR]`: 500 등 서버 오류의 원본 메시지, 오류 코드, 스택을 출력합니다. 운영 모드에서도 서버 콘솔에 스택이 남습니다.
+- `[C2][ABORTED]`: 응답 완료 전에 연결이 종료되면 출력합니다.
+
+같은 요청은 동일한 `request_id`를 사용하며 응답 헤더의 `X-Request-Id`에서도 확인할 수 있습니다. 통합 controller와 C2 라우터가 함께 동작해도 중복 출력하지 않습니다. JSON 파싱 전에 접근을 기록하므로 잘못된 JSON 요청도 확인할 수 있습니다. Authorization 헤더·요청 본문 전체·쿼리 문자열은 접근 로그에 포함하지 않습니다.
+
+예시:
+
+```text
+[INFO] [C2][REQUEST] Incoming request {"request_id":"...","method":"POST","path":"/v1/devices/heartbeat","remote_ip":"10.0.1.11"}
+[ERROR] [C2][ERROR] Request failed {
+  errorMessage: 'database connection refused',
+  stack: 'Error: database connection refused ...',
+  request_id: '...',
+  error_code: 'ECONNREFUSED',
+  status: 500
+}
+[INFO] [C2][RESPONSE] Request completed {"request_id":"...","method":"POST","path":"/v1/devices/heartbeat","remote_ip":"10.0.1.11","status":500,"duration_ms":4.2}
+```
+
+접근 로그 자체가 없다면 해당 요청이 이 프로세스까지 도달했는지, 실행 중인 서버 주소·포트와 재시작 여부를 확인합니다. `[REQUEST]`는 있지만 `[RESPONSE]`가 없다면 요청 처리가 아직 완료되지 않은 상태이며, 연결이 먼저 닫히면 `[ABORTED]`가 표시됩니다. 프로세스 관리자로 실행 중이면 해당 프로세스의 stdout·stderr 로그에서 확인합니다.

@@ -1,7 +1,10 @@
 import { Router } from "express";
 import internalRoutes from "./internalRoutes.js";
 import deviceRoutes from "./deviceRoutes.js";
+import { deviceRequestLogger, deviceRequestErrorLogger } from "../middleware/requestLogger.js";
 const router = Router();
+router.use("/devices", deviceRequestLogger);
 router.use("/devices", internalRoutes);
 router.use("/devices", deviceRoutes);
+router.use("/devices", deviceRequestErrorLogger);
 export default router;

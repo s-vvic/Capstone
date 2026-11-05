@@ -15,7 +15,8 @@ export const logger = {
     const timestamp = new Date().toISOString();
     console.error(`[${timestamp}] [ERROR] ${message}`, {
       errorMessage: error?.message || error,
-      stack: env.NODE_ENV === 'development' ? error?.stack : undefined,
+      stack: error?.stack,
+      errorCode: error?.code,
       ...meta,
     });
   },
