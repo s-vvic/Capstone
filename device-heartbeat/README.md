@@ -37,6 +37,8 @@ psql -v ON_ERROR_STOP=1 -f sql/migrate-v1-to-v2.sql
 
 ### Heartbeat 및 상태
 
+아래 JSON은 **보드가 서버의 `POST /v1/devices/heartbeat`로 보내는 요청 본문(Request Body)** 예시입니다. 보드의 현재 상태와 적용 중인 설정 버전을 보고하며, `Content-Type: application/json`으로 전송합니다.
+
 ```json
 {
   "mac": "001A2B3C4D5E",
@@ -49,11 +51,36 @@ psql -v ON_ERROR_STOP=1 -f sql/migrate-v1-to-v2.sql
 }
 ```
 
-`mac`·`status`·`rtsp_ok`·`wg_ok`·`config_version`은 필수입니다. 잘못된 타입·음수·구 필드는 400으로 거부합니다. `firmware_version`은 선택입니다. 응답 예시는 다음과 같습니다.
+#### Heartbeat 요청 필드
+
+| 요청 필드 | JSON 자료형 | 필수 여부 | 유효값 및 의미 |
+| --- | --- | --- | --- |
+| `mac` | String | 필수 | 대문자 16진수 12자리, 콜론·공백 없음. 예: `"001A2B3C4D5E"`. 등록된 VPN 출발지 IP의 보드 MAC과 일치해야 합니다. |
+| `status` | String | 필수 | `"online"`만 허용합니다. 오프라인은 서버가 heartbeat 수신 시간으로 판정합니다. |
+| `rtsp_ok` | Boolean | 필수 | `true` 또는 `false`. 보드의 RTSP 스트리밍 정상 여부입니다. |
+| `wg_ok` | Boolean | 필수 | `true` 또는 `false`. 보드가 보고하는 WireGuard 터널 정상 여부입니다. 서버의 실제 VPN 상태 판정을 대체하지 않습니다. |
+| `config_version` | Number (정수) | 필수 | `0`~`2147483647`. 보드가 현재 적용 중인 설정 버전입니다. 서버에서는 `applied_config_version`에 저장합니다. |
+| `storage_used_bytes` | Number (정수) | 선택 | `0`~`9007199254740991`. 보드의 사용 저장 용량이며 단위는 byte입니다. JavaScript 안전 정수 범위까지 허용합니다. |
+| `latency_ms` | Number (정수) | 선택 | `0`~`2147483647`. 보드가 보고하는 서버 응답 지연 시간이며 단위는 ms입니다. |
+| `firmware_version` | String | 선택 | 공백만으로 구성되지 않은 최대 50자의 펌웨어 버전 문자열입니다. 예: `"v2.0.0"`. 위 JSON 예시에는 생략되어 있습니다. |
+
+JSON에는 별도의 Integer 자료형이 없으므로 정수 필드는 Number로 보내되 소수 부분이 없어야 합니다. 숫자 `0`과 Boolean `false`도 유효하며, 문자열 `"0"`·`"true"`로 보내면 안 됩니다. 선택 필드는 생략하면 기존 저장값을 유지하고, `null`은 허용하지 않습니다. 필수 필드 누락, 잘못된 타입·범위, 표에 없는 필드나 구 필드는 **`400 BAD_REQUEST`**로 거부합니다. 형식은 맞더라도 등록되지 않은 출발지 IP이거나 MAC이 일치하지 않으면 **`403 FORBIDDEN`**으로 거부합니다.
+
+#### Heartbeat 정상 응답
+
+정상 수신 시 **`200 OK`**와 `Content-Type: application/json`으로 다음 본문을 반환합니다.
 
 ```json
-{ "config_version": 3 }
+{
+  "config_version": 3
+}
 ```
+
+| 응답 필드        | 타입    | 예시 | 의미                                                                                         |
+| ---------------- | ------- | ---- | -------------------------------------------------------------------------------------------- |
+| `config_version` | Integer | `3`  | 서버에 저장된 해당 보드의 최신 설정 버전. 요청에서 보고한 보드 적용 버전과 다를 수 있습니다. |
+
+위 요청의 적용 버전이 `0`이고 응답이 `3`이면, 보드는 서버에 더 최신 설정이 있음을 확인하고 `GET /v1/board/config`로 설정을 조회합니다. 설정을 적용한 후 다음 heartbeat 요청의 `config_version`에 `3`을 넣어 보고합니다. 응답 버전이 보드 적용 버전보다 크지 않으면 버전 비교에 따른 설정 조회는 필요하지 않습니다. 부팅 직후 설정 조회는 별도로 수행합니다. 설정 조회 API는 ICD에서 `[TBD]`이며 C6 구현 범위입니다.
 
 요청 버전은 `applied_config_version`에 저장하고 서버 `config_version`을 덮어쓰지 않습니다. C6가 존 변경과 서버 버전 증가를 단일 트랜잭션으로 수행하며 C2는 이를 반환합니다. `GET /board/config` 및 결과 보고는 C6 범위입니다.
 
