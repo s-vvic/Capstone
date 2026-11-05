@@ -1,168 +1,136 @@
-import { getPool } from '../config/database.js';
-
-/**
- * PostgreSQL 17.X 보드 저장소 (ICD 7.1.2 devices 및 실시간 상태 관리)
- */
+﻿import { getPool } from "../config/database.js";
+const MUTABLE = new Set([
+  "user_id",
+  "name",
+  "location",
+  "description",
+  "model",
+  "firmware_version",
+  "wg_pubkey",
+  "vpn_ip",
+  "config_version",
+  "applied_config_version",
+  "last_seen",
+  "is_active",
+  "registered_at",
+  "status",
+  "vpn_status",
+  "rtsp_ok",
+  "wg_ok",
+  "storage_used_bytes",
+  "latency_ms",
+  "last_handshake",
+  "uptime_seconds",
+  "storage_total_gb",
+  "latest_event_time",
+  "thumbnail_url",
+]);
 export class PostgresDeviceRepository {
-  constructor() {
-    this.pool = getPool();
+  constructor(pool = getPool()) {
+    this.pool = pool;
   }
-
-  async create(deviceData) {
-    const query = `
-      INSERT INTO devices (
-        device_id, user_id, mac_no, serial_no, register_code, name, location,
-        description, group_id, model, firmware_version, wg_pubkey, vpn_ip,
-        provision_token, is_active, status, vpn_status, rtsp_url, rtsp_url_sub,
-        thumbnail_url, registered_at, created_at, updated_at
-      )
-      VALUES (
-        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14,
-        $15, $16, $17, $18, $19, $20, $21, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
-      )
-      RETURNING *;
-    `;
-    const res = await this.pool.query(query, [
-      deviceData.deviceId,
-      deviceData.userId || null,
-      deviceData.macNo || null,
-      deviceData.serialNo || null,
-      deviceData.registerCode || null,
-      deviceData.name,
-      deviceData.location || '미지정',
-      deviceData.description || '',
-      deviceData.groupId || null,
-      deviceData.model || 'RV-1106',
-      deviceData.firmwareVersion || 'v1.0.0',
-      deviceData.wgPubkey || null,
-      deviceData.vpnIp || null,
-      deviceData.provisionToken || null,
-      deviceData.isActive !== false,
-      deviceData.status || 'offline',
-      deviceData.vpnStatus || 'disconnected',
-      deviceData.rtspUrl || null,
-      deviceData.rtspUrlSub || null,
-      deviceData.thumbnailUrl || '',
-      deviceData.registeredAt || null,
-    ]);
-    return res.rows[0];
+  fields(data) {
+    const entries = Object.entries(data);
+    if (entries.some(([k]) => k !== "mac" && !MUTABLE.has(k)))
+      throw new Error("Unsupported device column");
+    return entries;
   }
-
-  async findById(deviceId) {
-    const res = await this.pool.query('SELECT * FROM devices WHERE device_id = $1;', [deviceId]);
-    return res.rows[0] || null;
-  }
-
-  async findByMac(macNo) {
-    const res = await this.pool.query('SELECT * FROM devices WHERE mac_no = $1;', [macNo]);
-    return res.rows[0] || null;
-  }
-
-  async findBySerial(serialNo) {
-    const res = await this.pool.query('SELECT * FROM devices WHERE serial_no = $1;', [serialNo]);
-    return res.rows[0] || null;
-  }
-
-  async findByRegisterCode(code) {
-    const res = await this.pool.query('SELECT * FROM devices WHERE register_code = $1;', [code]);
-    return res.rows[0] || null;
-  }
-
-  async findByProvisionToken(token) {
-    const res = await this.pool.query('SELECT * FROM devices WHERE provision_token = $1;', [token]);
-    return res.rows[0] || null;
-  }
-
-  async findByUserId(userId) {
-    const res = await this.pool.query(
-      'SELECT * FROM devices WHERE user_id = $1 AND is_active = true ORDER BY created_at ASC;',
-      [userId]
+  async create(data) {
+    const entries = this.fields(data);
+    const result = await this.pool.query(
+      "INSERT INTO devices (" +
+        entries.map(([k]) => k).join(",") +
+        ") VALUES (" +
+        entries.map((_, i) => "$" + (i + 1)).join(",") +
+        ") RETURNING *",
+      entries.map(([, v]) => v),
     );
-    return res.rows;
+    return result.rows[0];
   }
-
+  async findByMac(mac) {
+    return (
+      (await this.pool.query("SELECT * FROM devices WHERE mac = $1", [mac]))
+        .rows[0] || null
+    );
+  }
+  async findByVpnIp(ip) {
+    return (
+      (
+        await this.pool.query(
+          "SELECT * FROM devices WHERE vpn_ip = $1 AND is_active = true",
+          [ip],
+        )
+      ).rows[0] || null
+    );
+  }
+  async findByUserId(id) {
+    return (
+      await this.pool.query(
+        "SELECT * FROM devices WHERE user_id = $1 AND is_active = true ORDER BY created_at, mac",
+        [id],
+      )
+    ).rows;
+  }
   async findAll() {
-    const res = await this.pool.query('SELECT * FROM devices ORDER BY created_at ASC;');
-    return res.rows;
+    return (
+      await this.pool.query("SELECT * FROM devices ORDER BY created_at, mac")
+    ).rows;
   }
-
-  async getAllAssignedVpnIps() {
-    const res = await this.pool.query('SELECT vpn_ip FROM devices WHERE vpn_ip IS NOT NULL;');
-    return res.rows.map((r) => r.vpn_ip);
+  async register(mac, userId, fields) {
+    // One statement prevents concurrent ownership claims from overwriting each other.
+    const result = await this.pool.query(
+      "INSERT INTO devices (mac,user_id,name,location,registered_at) VALUES ($1,$2,COALESCE($3,$5),$4,CURRENT_TIMESTAMP) ON CONFLICT (mac) DO UPDATE SET user_id = EXCLUDED.user_id, name = COALESCE($3,devices.name), location = EXCLUDED.location, registered_at = EXCLUDED.registered_at WHERE devices.is_active = true AND (devices.user_id IS NULL OR devices.user_id = EXCLUDED.user_id) RETURNING *",
+      [mac, userId, fields.name ?? null, fields.location, "보드 " + mac],
+    );
+    return result.rows[0] || null;
   }
-
-  async count() {
-    const res = await this.pool.query('SELECT COUNT(*) AS count FROM devices;');
-    return parseInt(res.rows[0].count, 10);
-  }
-
-  async update(deviceId, fields = {}) {
-    const setClauses = [];
-    const values = [];
-    let idx = 1;
-
-    for (const [key, value] of Object.entries(fields)) {
-      setClauses.push(`${key} = $${idx++}`);
-      values.push(value);
+  async update(mac, fields, userId) {
+    const entries = this.fields(fields);
+    if (!entries.length) return this.findByMac(mac);
+    const values = entries.map(([, v]) => v);
+    values.push(mac);
+    let where = "mac = $" + values.length;
+    if (userId !== undefined) {
+      values.push(userId);
+      where += " AND is_active = true AND user_id = $" + values.length;
     }
-
-    if (setClauses.length === 0) {
-      return this.findById(deviceId);
-    }
-
-    setClauses.push(`updated_at = CURRENT_TIMESTAMP`);
-    values.push(deviceId);
-
-    const query = `
-      UPDATE devices
-      SET ${setClauses.join(', ')}
-      WHERE device_id = $${idx}
-      RETURNING *;
-    `;
-    const res = await this.pool.query(query, values);
-    return res.rows[0] || null;
+    const result = await this.pool.query(
+      "UPDATE devices SET " +
+        entries.map(([k], i) => k + " = $" + (i + 1)).join(",") +
+        " WHERE " +
+        where +
+        " RETURNING *",
+      values,
+    );
+    return result.rows[0] || null;
   }
-
-  async updateHeartbeat(deviceId, metrics) {
-    const query = `
-      UPDATE devices
-      SET status = 'online',
-          vpn_status = $1,
-          last_seen = CURRENT_TIMESTAMP,
-          last_handshake = CURRENT_TIMESTAMP,
-          storage_used_bytes = COALESCE($2, storage_used_bytes),
-          storage_used_gb = ROUND((COALESCE($2, storage_used_bytes)::numeric / 1073741824.0), 2),
-          latency_ms = COALESCE($3, latency_ms),
-          firmware_version = COALESCE($4, firmware_version),
-          uptime_seconds = uptime_seconds + 30,
-          connected_duration_sec = connected_duration_sec + 30,
-          error_type = NULL,
-          updated_at = CURRENT_TIMESTAMP
-      WHERE device_id = $5
-      RETURNING *;
-    `;
-    const vpnStatus = metrics.wgOk ? 'connected' : 'error';
-    const res = await this.pool.query(query, [
-      vpnStatus,
-      metrics.storageUsedBytes || null,
-      metrics.latencyMs || null,
-      metrics.firmwareVersion || null,
-      deviceId,
-    ]);
-    return res.rows[0] || null;
+  async updateOwned(mac, userId, fields) {
+    return this.update(mac, fields, userId);
   }
-
-  async markStaleDevicesOffline(cutoffTime) {
-    const query = `
-      UPDATE devices
-      SET status = 'offline',
-          vpn_status = 'disconnected',
-          error_type = 'heartbeat_timeout',
-          updated_at = CURRENT_TIMESTAMP
-      WHERE status = 'online' AND (last_seen IS NULL OR last_seen < $1)
-      RETURNING device_id, name, serial_no, last_seen;
-    `;
-    const res = await this.pool.query(query, [cutoffTime]);
-    return res.rows;
+  async updateHeartbeat(mac, ip, metrics, now) {
+    // Lock the row so the previous status and returned latest config are consistent.
+    const result = await this.pool.query(
+      "WITH previous AS MATERIALIZED (SELECT mac, (last_seen IS NOT NULL AND last_seen >= $3::timestamptz - interval '15 seconds') AS was_online FROM devices WHERE mac=$1 AND vpn_ip=$2 AND is_active=true FOR UPDATE) UPDATE devices d SET last_seen=$3, status='online', rtsp_ok=$4, wg_ok=$5, applied_config_version=$6, storage_used_bytes=COALESCE($7,d.storage_used_bytes), latency_ms=COALESCE($8,d.latency_ms), firmware_version=COALESCE($9,d.firmware_version) FROM previous p WHERE d.mac=p.mac RETURNING d.*, p.was_online",
+      [
+        mac,
+        ip,
+        now,
+        metrics.rtsp_ok,
+        metrics.wg_ok,
+        metrics.applied_config_version,
+        metrics.storage_used_bytes ?? null,
+        metrics.latency_ms ?? null,
+        metrics.firmware_version ?? null,
+      ],
+    );
+    return result.rows[0] || null;
+  }
+  async markStaleDevicesOffline(cutoff) {
+    return (
+      await this.pool.query(
+        "UPDATE devices SET status='offline' WHERE is_active=true AND status='online' AND (last_seen IS NULL OR last_seen < $1) RETURNING *",
+        [cutoff],
+      )
+    ).rows;
   }
 }

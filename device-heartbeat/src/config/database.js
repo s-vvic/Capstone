@@ -20,7 +20,7 @@ export function getPool() {
       user: env.DB_USER,
       password: env.DB_PASSWORD,
       database: env.DB_NAME,
-      ssl: env.DB_SSL ? { rejectUnauthorized: false } : false,
+      ssl: env.DB_SSL ? { rejectUnauthorized: true } : false,
       max: 20,
       idleTimeoutMillis: 30000,
       connectionTimeoutMillis: 5000,

@@ -1,7 +1,7 @@
 {
   "name": "securecam-device-heartbeat-module",
-  "version": "1.0.0",
-  "description": "SecureCam Cloud Server - Component 2: Device Registry & Heartbeat Management Module (SV-F-010 ~ SV-F-014, ICD-01 2.2/2.5, ICD-02 3.1/3.2, ICD-03 3.4)",
+  "version": "2.0.0",
+  "description": "SecureCam C2: MAC registry and VPN-source authenticated heartbeat (ICD_v2)",
   "main": "src/index.js",
   "type": "module",
   "scripts": {
@@ -14,8 +14,6 @@
     "device-registry",
     "heartbeat",
     "offline-detection",
-    "vpn-monitor",
-    "ptz-control",
     "express",
     "postgresql"
   ],
@@ -33,6 +31,6 @@
     "supertest": "^7.0.0"
   },
   "engines": {
-    "node": ">=20.0.0"
+    "node": ">=24.11.0"
   }
 }

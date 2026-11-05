@@ -1,166 +1,115 @@
-import { test, describe, beforeEach } from 'node:test';
-import assert from 'node:assert/strict';
-import request from 'supertest';
-import { createDeviceHeartbeatApp } from '../src/index.js';
-import { setInMemoryDriver, deviceRepository } from '../src/repositories/index.js';
-
-describe('SV-F-013 & ICD 3.1 / 3.2 보드 프로비저닝 및 Heartbeat 처리 테스트', () => {
-  let app;
-
-  beforeEach(() => {
-    setInMemoryDriver();
-    app = createDeviceHeartbeatApp();
+import { test, beforeEach } from "node:test";
+import assert from "node:assert/strict";
+import request from "supertest";
+import { heartbeatService } from "../src/services/heartbeatService.js";
+import { reset, seed, heartbeat, mac, deviceRepository } from "./helpers.js";
+let app;
+beforeEach(() => {
+  app = reset();
+});
+const send = (body) => request(app).post("/v1/devices/heartbeat").send(body);
+test("TCP VPN source auth returns latest config and persists applied version only", async () => {
+  await seed({
+    config_version: 7,
+    applied_config_version: 1,
+    last_handshake: "2026-01-01T00:00:00.000Z",
   });
-
-  test('보드 최초 부팅 시 프로비저닝 요청 성공 (POST /devices/provision-by-serial, ICD 3.1)', async () => {
-    const res = await request(app)
-      .post('/v1/devices/provision-by-serial')
-      .send({
-        serial_no: 'VPNCAM-000001',
-        wg_pubkey: 'boardWireGuardPubKeyBase64=',
-        firmware_version: 'v1.0.0',
-        model: 'RV-1106',
-      });
-
-    assert.equal(res.status, 200);
-    assert.ok(res.body.device_id.startsWith('CAM-'));
-    assert.ok(res.body.vpn_ip.startsWith('10.0.0.'));
-    assert.ok(res.body.server_pubkey);
-    assert.ok(res.body.server_endpoint);
-    assert.ok(res.body.provision_token.startsWith('prov_'));
-    assert.ok(res.body.rtsp_proxy_ip);
+  const res = await send(
+    heartbeat({
+      config_version: 3,
+      storage_used_bytes: 1073741824,
+      latency_ms: 12,
+      firmware_version: "2.0",
+    }),
+  );
+  assert.equal(res.status, 200);
+  assert.deepEqual(res.body, { config_version: 7 });
+  const saved = await deviceRepository.findByMac(mac);
+  assert.equal(saved.applied_config_version, 3);
+  assert.equal(saved.config_version, 7);
+  assert.equal(saved.storage_used_bytes, 1073741824);
+  assert.equal(saved.firmware_version, "2.0");
+  assert.equal(saved.latency_ms, 12);
+  assert.ok(saved.last_seen);
+  assert.equal(saved.last_handshake, "2026-01-01T00:00:00.000Z");
+  assert.equal(saved.uptime_seconds, null);
+});
+test("false metrics and zero optional values are preserved; omission preserves previous values", async () => {
+  await seed({
+    storage_used_bytes: 1024,
+    latency_ms: 9,
+    vpn_status: "connected",
   });
-
-  test('정상 Heartbeat 전송 시 204 No Content 반환 및 상태 갱신 (POST /devices/heartbeat, ICD 3.2, SV-F-013)', async () => {
-    // 1. 사전 프로비저닝
-    const provRes = await request(app)
-      .post('/v1/devices/provision-by-serial')
-      .send({
-        serial_no: 'VPNCAM-000001',
-        wg_pubkey: 'boardWireGuardPubKeyBase64=',
-        firmware_version: 'v1.0.0',
-        model: 'RV-1106',
-      });
-
-    const { provision_token, device_id } = provRes.body;
-
-    // 2. 30초 주기 Heartbeat 전송
-    const hbRes = await request(app)
-      .post('/v1/devices/heartbeat')
-      .send({
-        serial_no: 'VPNCAM-000001',
-        provision_token,
-        status: 'online',
-        rtsp_ok: true,
-        wg_ok: true,
-        storage_used_bytes: 1073741824, // 1GB
-        firmware_version: 'v1.0.1',
-        latency_ms: 15,
-      });
-
-    assert.equal(hbRes.status, 204);
-
-    // 3. 저장소 상태 갱신 확인
-    const device = await deviceRepository.findById(device_id);
-    assert.equal(device.status, 'online');
-    assert.equal(device.vpn_status, 'connected');
-    assert.ok(device.last_seen);
-    assert.ok(device.last_handshake);
-    assert.equal(device.storage_used_bytes, 1073741824);
-    assert.equal(device.storage_used_gb, 1.0);
-    assert.equal(device.firmware_version, 'v1.0.1');
-    assert.equal(device.latency_ms, 15);
-    assert.equal(device.uptime_seconds, 30);
-  });
-
-  test('Heartbeat 전송 시 provision_token 불일치 시 403 Forbidden 반환 (ICD 3.2.1)', async () => {
-    // 1. 프로비저닝
-    await request(app)
-      .post('/v1/devices/provision-by-serial')
-      .send({
-        serial_no: 'VPNCAM-000002',
-        wg_pubkey: 'boardWireGuardPubKeyBase64=',
-      });
-
-    // 2. 잘못된 토큰으로 Heartbeat 전송
-    const hbRes = await request(app)
-      .post('/v1/devices/heartbeat')
-      .send({
-        serial_no: 'VPNCAM-000002',
-        provision_token: 'wrong_invalid_token',
-        status: 'online',
-        rtsp_ok: true,
-        wg_ok: true,
-      });
-
-    assert.equal(hbRes.status, 403);
-    assert.equal(hbRes.body.code, 'FORBIDDEN');
-    assert.ok(hbRes.body.message.includes('토큰 불일치'));
-  });
-
-  test('미등록 시리얼 번호로 Heartbeat 전송 시 403 Forbidden 반환', async () => {
-    const hbRes = await request(app)
-      .post('/v1/devices/heartbeat')
-      .send({
-        serial_no: 'VPNCAM-UNREGISTERED',
-        provision_token: 'some_token',
-        status: 'online',
-        rtsp_ok: true,
-        wg_ok: true,
-      });
-
-    assert.equal(hbRes.status, 403);
-    assert.equal(hbRes.body.code, 'FORBIDDEN');
-  });
-
-  test('보드 최초 부팅 시 MAC 기반 프로비저닝 및 SV-F-015 식별 번호 부여 성공 (POST /devices/provision-by-mac, ICD_v2 3.1)', async () => {
-    const res = await request(app)
-      .post('/v1/devices/provision-by-mac')
-      .send({
-        mac_no: '11:22:33:44:AA:99',
-        wg_pubkey: 'wgPublicKeyBase64Test1234=',
-        firmware_version: 'v1.2.0',
-        model: 'RV-1106',
-      });
-
-    assert.equal(res.status, 200);
-    // SV-F-015: MAC 주소 기반 고유 식별 번호 부여 (CAM-AA99)
-    assert.equal(res.body.device_id, 'CAM-AA99');
-    assert.ok(res.body.vpn_ip.startsWith('10.0.0.'));
-    assert.ok(res.body.server_pubkey);
-    assert.ok(res.body.server_endpoint);
-    assert.ok(res.body.provision_token);
-    assert.ok(res.body.rtsp_proxy_ip);
-  });
-
-  test('MAC_no 기반 30초 주기 Heartbeat 전송 및 상태 갱신 성공 (ICD_v2 3.2, SV-F-013)', async () => {
-    // 1. provision-by-mac
-    const provRes = await request(app)
-      .post('/v1/devices/provision-by-mac')
-      .send({
-        mac_no: 'AA:BB:CC:DD:EE:77',
-        wg_pubkey: 'wgKey77=',
-      });
-    assert.equal(provRes.status, 200);
-    const { device_id, provision_token } = provRes.body;
-
-    // 2. MAC_no 필드로 Heartbeat 전송 (ICD_v2 3.2.1 규격)
-    const hbRes = await request(app)
-      .post('/v1/devices/heartbeat')
-      .send({
-        MAC_no: 'AA:BB:CC:DD:EE:77',
-        provision_token,
-        status: 'online',
-        rtsp_ok: true,
-        wg_ok: true,
-        latency_ms: 12,
-      });
-
-    assert.equal(hbRes.status, 204);
-
-    // 3. 상태 검증
-    const device = await deviceRepository.findById(device_id);
-    assert.equal(device.status, 'online');
-    assert.equal(device.latency_ms, 12);
-  });
+  const res = await send(
+    heartbeat({
+      rtsp_ok: false,
+      wg_ok: false,
+      storage_used_bytes: 0,
+      latency_ms: 0,
+    }),
+  );
+  assert.equal(res.status, 200);
+  await send(heartbeat());
+  const d = await deviceRepository.findByMac(mac);
+  assert.equal(d.storage_used_bytes, 0);
+  assert.equal(d.latency_ms, 0);
+  assert.equal(d.vpn_status, "connected");
+  await send(heartbeat({ rtsp_ok: false, wg_ok: false }));
+  const bad = await deviceRepository.findByMac(mac);
+  assert.equal(bad.rtsp_ok, false);
+  assert.equal(bad.wg_ok, false);
+});
+test("forwarding headers cannot spoof registered source and wrong MAC cannot mutate state", async () => {
+  await seed({ vpn_ip: "10.0.1.11" });
+  const res = await request(app)
+    .post("/v1/devices/heartbeat")
+    .set("X-Forwarded-For", "10.0.1.11")
+    .set("X-Real-IP", "10.0.1.11")
+    .send(heartbeat());
+  assert.equal(res.status, 403);
+  assert.equal(res.body.error_code, "FORBIDDEN");
+  await deviceRepository.update(mac, { vpn_ip: "127.0.0.1" });
+  assert.equal((await send(heartbeat({ mac: "AAAAAAAAAAAA" }))).status, 403);
+  assert.equal((await deviceRepository.findByMac(mac)).last_seen, null);
+});
+test("unregistered/inactive source and missing direct source fail closed", async () => {
+  assert.equal((await send(heartbeat())).status, 403);
+  await seed({ is_active: false });
+  assert.equal((await send(heartbeat())).status, 403);
+  await assert.rejects(
+    heartbeatService.processHeartbeat(heartbeat()),
+    (e) => e.status === 403,
+  );
+});
+test("required fields and malformed metrics rejected without mutation", async () => {
+  await seed();
+  for (const key of ["mac", "status", "rtsp_ok", "wg_ok", "config_version"]) {
+    const body = heartbeat();
+    delete body[key];
+    assert.equal((await send(body)).status, 400, key);
+  }
+  for (const fields of [
+    { rtsp_ok: 1 },
+    { wg_ok: "true" },
+    { status: "offline" },
+    { config_version: -1 },
+    { config_version: 1.5 },
+    { config_version: "2" },
+    { latency_ms: -1 },
+    { storage_used_bytes: "0" },
+    { firmware_version: 42 },
+    { provision_token: "old" },
+  ])
+    assert.equal(
+      (await send(heartbeat(fields))).status,
+      400,
+      JSON.stringify(fields),
+    );
+  assert.equal((await deviceRepository.findByMac(mac)).last_seen, null);
+});
+test("mapped IPv6 matches registered IPv4; no heartbeat history repository exists", async () => {
+  await seed({ vpn_ip: "10.0.1.11" });
+  await heartbeatService.processHeartbeat(heartbeat(), "::ffff:10.0.1.11");
+  const exports = await import("../src/repositories/index.js");
+  assert.equal("heartbeatRepository" in exports, false);
 });

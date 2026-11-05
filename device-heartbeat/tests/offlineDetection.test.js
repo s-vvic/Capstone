@@ -1,69 +1,83 @@
-import { test, describe, beforeEach } from 'node:test';
-import assert from 'node:assert/strict';
-import request from 'supertest';
-import { createDeviceHeartbeatApp } from '../src/index.js';
-import { setInMemoryDriver, deviceRepository } from '../src/repositories/index.js';
-import { heartbeatMonitor } from '../src/services/heartbeatMonitor.js';
-
-describe('SV-F-011 & NF-P-003 보드 온라인/오프라인 실시간 감시 및 타임아웃 감지 테스트', () => {
-  let app;
-
-  beforeEach(() => {
-    setInMemoryDriver();
-    app = createDeviceHeartbeatApp();
+import { test, beforeEach } from "node:test";
+import assert from "node:assert/strict";
+import { heartbeatService } from "../src/services/heartbeatService.js";
+import { onlineStatus } from "../src/services/deviceService.js";
+import {
+  reset,
+  seed,
+  heartbeat,
+  mac,
+  deviceRepository,
+  heartbeatMonitor,
+  env,
+} from "./helpers.js";
+beforeEach(reset);
+test("ICD defaults are 5s heartbeat and >15s offline", () => {
+  assert.equal(env.HEARTBEAT_INTERVAL_SECONDS, 5);
+  assert.equal(env.OFFLINE_TIMEOUT_SECONDS, 15);
+});
+test("15-second boundary and one-time offline event preserve actual VPN state", async () => {
+  const now = Date.now();
+  await seed({
+    last_seen: new Date(now).toISOString(),
+    status: "online",
+    vpn_status: "connected",
   });
-
-  test('Heartbeat 수신 후 온라인 유지 및 타임아웃 경과 시 자동 오프라인 전환 (SV-F-011)', async () => {
-    // 1. 프로비저닝
-    const provRes = await request(app)
-      .post('/v1/devices/provision-by-serial')
-      .send({
-        serial_no: 'VPNCAM-ONLINE-01',
-        wg_pubkey: 'pubkey1=',
-      });
-    const { device_id, provision_token } = provRes.body;
-
-    // 2. Heartbeat 전송 -> 온라인 상태 확인
-    await request(app)
-      .post('/v1/devices/heartbeat')
-      .send({
-        serial_no: 'VPNCAM-ONLINE-01',
-        provision_token,
-        status: 'online',
-        rtsp_ok: true,
-        wg_ok: true,
-      });
-
-    let device = await deviceRepository.findById(device_id);
-    assert.equal(device.status, 'online');
-    assert.equal(device.vpn_status, 'connected');
-
-    // 3. 상태 변경 이벤트 리스너 등록
-    let notifiedEvent = null;
-    heartbeatMonitor.onStatusChange((evt) => {
-      notifiedEvent = evt;
-    });
-
-    // 4. 시간을 과거(70초 전)로 시뮬레이션
-    const staleTime = new Date(Date.now() - 70 * 1000).toISOString();
-    await deviceRepository.update(device_id, { last_seen: staleTime });
-
-    // 5. 생존 감시 검사 실행
-    const changed = await heartbeatMonitor.checkStaleDevices();
-
-    assert.equal(changed.length, 1);
-    assert.equal(changed[0].device_id, device_id);
-
-    // 6. DB 상태가 offline / disconnected로 전환되었는지 확인
-    device = await deviceRepository.findById(device_id);
-    assert.equal(device.status, 'offline');
-    assert.equal(device.vpn_status, 'disconnected');
-    assert.equal(device.error_type, 'heartbeat_timeout');
-
-    // 7. 상태 변경 알림 이벤트 발행 확인
-    assert.ok(notifiedEvent);
-    assert.equal(notifiedEvent.deviceId, device_id);
-    assert.equal(notifiedEvent.oldStatus, 'online');
-    assert.equal(notifiedEvent.newStatus, 'offline');
-  });
+  const events = [];
+  const unsubscribe = heartbeatMonitor.onStatusChange((e) => events.push(e));
+  assert.equal(
+    onlineStatus(await deviceRepository.findByMac(mac), now + 15000),
+    "online",
+  );
+  assert.equal(
+    (await heartbeatMonitor.checkStaleDevices(now + 15000)).length,
+    0,
+  );
+  assert.equal(
+    (await heartbeatMonitor.checkStaleDevices(now + 15001)).length,
+    1,
+  );
+  assert.equal(
+    (await heartbeatMonitor.checkStaleDevices(now + 16000)).length,
+    0,
+  );
+  assert.equal(events.length, 1);
+  assert.equal(events[0].mac, mac);
+  assert.equal(events[0].new_status, "offline");
+  assert.equal((await deviceRepository.findByMac(mac)).vpn_status, "connected");
+  unsubscribe();
+});
+test("initial/reconnect online emitted once and listener can unsubscribe", async () => {
+  await seed();
+  const events = [];
+  const unsubscribe = heartbeatMonitor.onStatusChange(async (e) =>
+    events.push(e),
+  );
+  const now = Date.now();
+  await heartbeatService.processHeartbeat(heartbeat(), "127.0.0.1", now);
+  await heartbeatService.processHeartbeat(heartbeat(), "127.0.0.1", now + 5000);
+  assert.equal(events.length, 1);
+  assert.equal(events[0].new_status, "online");
+  await heartbeatMonitor.checkStaleDevices(now + 21000);
+  await heartbeatService.processHeartbeat(
+    heartbeat(),
+    "127.0.0.1",
+    now + 22000,
+  );
+  assert.deepEqual(
+    events.map((e) => e.new_status),
+    ["online", "offline", "online"],
+  );
+  unsubscribe();
+  await heartbeatMonitor.checkStaleDevices(now + 40000);
+  assert.equal(events.length, 3);
+});
+test("monitor lifecycle is idempotent", () => {
+  heartbeatMonitor.start();
+  const timer = heartbeatMonitor.timer;
+  heartbeatMonitor.start();
+  assert.equal(heartbeatMonitor.timer, timer);
+  heartbeatMonitor.stop();
+  heartbeatMonitor.stop();
+  assert.equal(heartbeatMonitor.isRunning, false);
 });

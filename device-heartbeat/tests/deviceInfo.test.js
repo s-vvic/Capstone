@@ -1,94 +1,95 @@
-import { test, describe, beforeEach } from 'node:test';
-import assert from 'node:assert/strict';
-import request from 'supertest';
-import jwt from 'jsonwebtoken';
-import { createDeviceHeartbeatApp, env } from '../src/index.js';
-import { setInMemoryDriver } from '../src/repositories/index.js';
-
-describe('SV-F-012 & ICD 2.2.1 / 2.2.3 / 2.2.4 보드 목록, 상세 상태 및 정보 수정 테스트', () => {
-  let app;
-  let testToken;
-  const testUserId = '12345678-1234-1234-1234-123456789012';
-
-  beforeEach(() => {
-    setInMemoryDriver();
-    app = createDeviceHeartbeatApp();
-
-    testToken = jwt.sign(
-      { sub: testUserId, email: 'owner@securecam.com', name: '소유자', plan: 'standard' },
-      env.JWT_SECRET
-    );
+﻿import { test, beforeEach } from "node:test";
+import assert from "node:assert/strict";
+import request from "supertest";
+import {
+  reset,
+  token,
+  mac,
+  other,
+  seed,
+  deviceRepository,
+  env,
+} from "./helpers.js";
+let app;
+beforeEach(() => {
+  app = reset();
+});
+const get = (path, auth = token()) =>
+  request(app)
+    .get(path)
+    .set("Authorization", "Bearer " + auth);
+test("JWT required; development headers cannot bypass auth", async () => {
+  assert.equal(
+    (await request(app).get("/v1/devices").set("x-user-id", "attacker")).status,
+    401,
+  );
+  assert.equal(
+    (await get("/v1/devices", token(undefined, { expiresIn: -1 }))).status,
+    401,
+  );
+  assert.equal((await get("/v1/devices", "invalid")).status, 401);
+});
+test("owner-only list and status; unowned records are not public", async () => {
+  await seed();
+  assert.equal((await get("/v1/devices", token(other))).body.length, 0);
+  assert.equal(
+    (await get("/v1/devices/" + mac + "/status", token(other))).status,
+    403,
+  );
+  await deviceRepository.update(mac, { user_id: null });
+  assert.equal((await get("/v1/devices/" + mac + "/status")).status, 403);
+});
+test("status derives expiration without monitor; no fabricated uptime or handshake", async () => {
+  await seed({
+    last_seen: new Date(Date.now() - 16000).toISOString(),
+    status: "online",
+    vpn_ip: "10.0.1.11",
   });
-
-  test('로그인 사용자의 등록 보드 목록 전체 조회 (GET /devices, ICD 2.2.1)', async () => {
-    // 2대 보드 등록
-    await request(app)
-      .post('/v1/devices/register')
-      .set('Authorization', `Bearer ${testToken}`)
-      .send({ register_type: 'serial', serial_no: 'SN-001', name: '카메라 1' });
-
-    await request(app)
-      .post('/v1/devices/register')
-      .set('Authorization', `Bearer ${testToken}`)
-      .send({ register_type: 'serial', serial_no: 'SN-002', name: '카메라 2' });
-
-    const res = await request(app)
-      .get('/v1/devices')
-      .set('Authorization', `Bearer ${testToken}`);
-
-    assert.equal(res.status, 200);
-    assert.equal(res.body.length, 2);
-    assert.equal(res.body[0].name, '카메라 1');
-    assert.equal(res.body[1].name, '카메라 2');
-    assert.ok(res.body[0].device_id);
-    assert.ok(res.body[0].serial_no);
-    assert.ok(res.body[0].status);
-    assert.ok(res.body[0].vpn_status);
-  });
-
-  test('특정 보드의 현재 상세 상태 및 스트림 URL 조회 (GET /devices/:id/status, ICD 2.2.3)', async () => {
-    const regRes = await request(app)
-      .post('/v1/devices/register')
-      .set('Authorization', `Bearer ${testToken}`)
-      .send({ register_type: 'serial', serial_no: 'SN-STATUS-01', name: '상태 테스트 카메라' });
-
-    const deviceId = regRes.body.device_id;
-
-    const res = await request(app)
-      .get(`/v1/devices/${deviceId}/status`)
-      .set('Authorization', `Bearer ${testToken}`);
-
-    assert.equal(res.status, 200);
-    assert.equal(res.body.status, 'offline');
-    assert.equal(res.body.vpn_status, 'disconnected');
-    assert.ok(res.body.vpn_ip.startsWith('10.0.0.'));
-    assert.ok(res.body.rtsp_url.includes(':8554/'));
-    assert.ok(res.body.rtsp_url_sub.includes(':8554/'));
-    assert.equal(res.body.storage_total_gb, 32.0);
-  });
-
-  test('보드 이름, 위치, 설명, 그룹 정보 수정 (PATCH /devices/:id, SV-F-012, ICD 2.2.4)', async () => {
-    const regRes = await request(app)
-      .post('/v1/devices/register')
-      .set('Authorization', `Bearer ${testToken}`)
-      .send({ register_type: 'serial', serial_no: 'SN-EDIT-01', name: '원래 이름' });
-
-    const deviceId = regRes.body.device_id;
-
-    const res = await request(app)
-      .patch(`/v1/devices/${deviceId}`)
-      .set('Authorization', `Bearer ${testToken}`)
-      .send({
-        name: '수정된 거실 카메라',
-        location: '거실 정면 벽면',
-        description: '가족 안전 모니터링용 웹캠',
-        group_id: 'LIVING_ROOM',
-      });
-
-    assert.equal(res.status, 200);
-    assert.equal(res.body.name, '수정된 거실 카메라');
-    assert.equal(res.body.location, '거실 정면 벽면');
-    assert.equal(res.body.description, '가족 안전 모니터링용 웹캠');
-    assert.equal(res.body.group_id, 'LIVING_ROOM');
-  });
+  const res = await get("/v1/devices/" + mac + "/status");
+  assert.equal(res.status, 200);
+  assert.equal(res.body.status, "offline");
+  assert.equal(
+    res.body.rtsp_url,
+    "rtsp://10.0.1.11:" + env.RTSP_PORT + "/live/0",
+  );
+  assert.equal(
+    res.body.rtsp_url_sub,
+    "rtsp://10.0.1.11:" + env.RTSP_PORT + "/live/1",
+  );
+  assert.equal(res.body.uptime_seconds, null);
+  assert.equal(res.body.last_handshake, null);
+  assert.equal(res.body.storage_total_gb, null);
+});
+test("patch validates strings and cannot change ownership/VPN/config", async () => {
+  await seed();
+  const patch = (body) =>
+    request(app)
+      .patch("/v1/devices/" + mac)
+      .set("Authorization", "Bearer " + token())
+      .send(body);
+  for (const body of [
+    {},
+    { name: "" },
+    { name: "a".repeat(51) },
+    { location: [] },
+    { description: {} },
+    { config_version: 5 },
+    { user_id: other },
+    { vpn_ip: "10.0.1.5" },
+  ])
+    assert.equal((await patch(body)).status, 400);
+  const res = await patch({ name: "거실", location: "거실", description: "" });
+  assert.equal(res.status, 200);
+  assert.equal(res.body.name, "거실");
+});
+test("unknown/invalid MAC and malformed JSON return ICD error_code", async () => {
+  assert.equal((await get("/v1/devices/AAAAAAAAAAAA/status")).status, 404);
+  assert.equal((await get("/v1/devices/CAM-4D5E/status")).status, 400);
+  const res = await request(app)
+    .post("/v1/devices/register")
+    .set("Content-Type", "application/json")
+    .send("{");
+  assert.equal(res.status, 400);
+  assert.equal(res.body.error_code, "BAD_REQUEST");
+  assert.equal("code" in res.body, false);
 });
