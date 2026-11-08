@@ -6,7 +6,7 @@ export function errorHandler(err, req, res, next) {
   else if (err.type === "entity.too.large")
     error = AppError.badRequest("Request body too large");
   else if (err.code === "23505")
-    error = AppError.conflict("Duplicate board or VPN IP");
+    error = AppError.conflict("Duplicate MAC, device_id (MAC suffix collision), or VPN IP");
   else if (!(err instanceof AppError)) {
     // The request error observer logs the original cause and stack before conversion.
     error = AppError.internal("Internal server error");

@@ -1,4 +1,5 @@
 ﻿import { AppError } from "../errors/AppError.js";
+import { deviceIdFromMac } from "../utils/deviceIdentity.js";
 export function newDevice(data) {
   return {
     user_id: null,
@@ -27,6 +28,7 @@ export function newDevice(data) {
     latest_event_time: null,
     thumbnail_url: null,
     ...data,
+    device_id: deviceIdFromMac(data.mac),
   };
 }
 export class InMemoryDeviceRepository {
@@ -34,7 +36,10 @@ export class InMemoryDeviceRepository {
     this.devices = new Map();
   }
   async create(data) {
+    const deviceId = deviceIdFromMac(data.mac);
     if (this.devices.has(data.mac)) throw AppError.conflict("Duplicate mac");
+    if ([...this.devices.values()].some((device) => device.device_id === deviceId))
+      throw AppError.conflict("device_id collision: another MAC has the same last four characters");
     if (
       data.vpn_ip &&
       [...this.devices.values()].some((d) => d.vpn_ip === data.vpn_ip)
@@ -81,6 +86,7 @@ export class InMemoryDeviceRepository {
     return this.create({ mac, ...data });
   }
   async update(mac, fields) {
+    if ("mac" in fields || "device_id" in fields) throw AppError.badRequest("Device identity is immutable");
     const d = this.devices.get(mac);
     if (!d) return null;
     if (
@@ -103,7 +109,7 @@ export class InMemoryDeviceRepository {
     if (!d?.is_active || !ip || d.vpn_ip !== ip) return null;
     const wasOnline =
       d.last_seen && new Date(now) - new Date(d.last_seen) <= 15000;
-    Object.assign(d, metrics, { last_seen: now, status: "online" });
+    Object.assign(d, metrics, { device_id: deviceIdFromMac(mac), last_seen: now, status: "online" });
     return { ...d, was_online: Boolean(wasOnline) };
   }
   async markStaleDevicesOffline(cutoffTime) {

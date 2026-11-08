@@ -1,6 +1,7 @@
 import { deviceRepository } from "../repositories/index.js";
 import { AppError } from "../errors/AppError.js";
 import { env } from "../config/env.js";
+import { deviceIdentity } from "../utils/deviceIdentity.js";
 import {
   bodyObject,
   macAddress,
@@ -17,7 +18,7 @@ export function onlineStatus(device, now = Date.now()) {
 }
 export function deviceView(d) {
   return {
-    mac: d.mac,
+    ...deviceIdentity(d),
     name: d.name,
     location: d.location,
     firmware_version: d.firmware_version,
@@ -47,7 +48,14 @@ export class DeviceService {
     macAddress(data.mac);
     const fields = { location: text(data.location, "location", 200) };
     if (data.name !== undefined) fields.name = text(data.name, "name", 50);
-    const result = await deviceRepository.register(data.mac, userId, fields);
+    let result;
+    try {
+      result = await deviceRepository.register(data.mac, userId, fields);
+    } catch (error) {
+      // Preserve the conflict status under the controller's error handler too.
+      if (error.code === "23505") throw AppError.conflict("Duplicate MAC, device_id (same MAC suffix), or VPN IP");
+      throw error;
+    }
     if (!result)
       throw AppError.conflict("Board already registered or inactive");
     return deviceView(result);
@@ -59,6 +67,7 @@ export class DeviceService {
   async getDeviceStatus(mac, userId) {
     const d = await this.ownedDevice(mac, userId);
     return {
+      ...deviceIdentity(d),
       status: onlineStatus(d),
       vpn_status: d.vpn_status,
       vpn_ip: d.vpn_ip,

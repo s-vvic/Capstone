@@ -12,6 +12,9 @@ DO $$ BEGIN
   IF EXISTS (SELECT 1 FROM devices GROUP BY upper(replace(trim(mac_no), ':', '')) HAVING count(*) > 1) THEN
     RAISE EXCEPTION 'Duplicate normalized MAC';
   END IF;
+  IF EXISTS (SELECT 1 FROM devices GROUP BY right(upper(replace(trim(mac_no), ':', '')), 4) HAVING count(*) > 1) THEN
+    RAISE EXCEPTION 'device_id collision: duplicate last four MAC characters';
+  END IF;
   IF EXISTS (SELECT 1 FROM devices WHERE vpn_ip IS NOT NULL GROUP BY vpn_ip HAVING count(*) > 1) THEN
     RAISE EXCEPTION 'Duplicate VPN IP';
   END IF;

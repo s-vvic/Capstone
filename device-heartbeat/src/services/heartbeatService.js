@@ -1,6 +1,7 @@
 import { deviceRepository } from "../repositories/index.js";
 import { heartbeatMonitor } from "./heartbeatMonitor.js";
 import { AppError } from "../errors/AppError.js";
+import { deviceIdentity } from "../utils/deviceIdentity.js";
 import {
   bodyObject,
   macAddress,
@@ -55,6 +56,7 @@ export class HeartbeatService {
       model: data.model,
     });
     return {
+      ...deviceIdentity(device),
       vpn_ip: result.vpn_ip,
       server_pubkey: result.server_pubkey,
       server_endpoint: result.server_endpoint,
@@ -111,7 +113,7 @@ export class HeartbeatService {
     if (!updated.was_online)
       await heartbeatMonitor.publish(updated, "offline", "online", receivedAt);
     // No heartbeat history, fabricated handshake, uptime or VPN connection state.
-    return { config_version: updated.config_version };
+    return { ...deviceIdentity(updated), config_version: updated.config_version };
   }
 }
 export const heartbeatService = new HeartbeatService();

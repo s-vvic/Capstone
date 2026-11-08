@@ -23,7 +23,7 @@ test("TCP VPN source auth returns latest config and persists applied version onl
     }),
   );
   assert.equal(res.status, 200);
-  assert.deepEqual(res.body, { config_version: 7 });
+  assert.deepEqual(res.body, { device_id: "CAM-4D5E", mac, config_version: 7 });
   const saved = await deviceRepository.findByMac(mac);
   assert.equal(saved.applied_config_version, 3);
   assert.equal(saved.config_version, 7);

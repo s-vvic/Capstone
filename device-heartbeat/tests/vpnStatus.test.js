@@ -70,11 +70,15 @@ test("authenticated reprovision calls C4 adapter and returns only ICD fields", a
   assert.equal(res.status, 200);
   assert.equal(called, true);
   assert.deepEqual(Object.keys(res.body).sort(), [
+    "device_id",
+    "mac",
     "rtsp_proxy_ip",
     "server_endpoint",
     "server_pubkey",
     "vpn_ip",
   ]);
+  assert.equal(res.body.device_id, "CAM-4D5E");
+  assert.equal(res.body.mac, mac);
   assert.equal((await deviceRepository.findByMac(mac)).wg_pubkey, "key");
 });
 test("provision fields and adapter result are validated", async () => {

@@ -1,5 +1,7 @@
 ﻿import { test, beforeEach } from "node:test";
 import assert from "node:assert/strict";
+import { mock } from "node:test";
+import { createControllerApp } from "../../controller/src/app.js";
 import request from "supertest";
 import { reset, token, mac, other, seed, deviceRepository } from "./helpers.js";
 let app;
@@ -15,17 +17,18 @@ test("MAC registration uses full identity and does not allocate VPN credentials"
   const res = await register({ mac, location: "거실" });
   assert.equal(res.status, 201);
   assert.equal(res.body.mac, mac);
+  assert.equal(res.body.device_id, "CAM-4D5E");
+  assert.equal((await deviceRepository.findByMac(mac)).device_id, "CAM-4D5E");
   assert.equal(res.body.vpn_ip, null);
   assert.equal(res.body.name, "보드 " + mac);
   for (const key of [
-    "device_id",
     "mac_no",
     "MAC_no",
     "provision_token",
     "wg_pubkey",
   ])
     assert.equal(key in res.body, false);
-  const second = await register({ mac: "AA1122334D5E", location: "거실" });
+  const second = await register({ mac: "AA1122334D5F", location: "거실" });
   assert.equal(second.status, 201);
   assert.equal(
     (
@@ -35,6 +38,29 @@ test("MAC registration uses full identity and does not allocate VPN credentials"
     ).body.length,
     2,
   );
+});
+test("different MACs with the same suffix are rejected without overwriting the first board", async () => {
+  await register({ mac, location: "A" });
+  const collision = await register({ mac: "AA1122334D5E", location: "B" });
+  assert.equal(collision.status, 409);
+  assert.equal(collision.body.error_code, "CONFLICT");
+  assert.equal(await deviceRepository.findByMac("AA1122334D5E"), null);
+  assert.equal((await deviceRepository.findByMac(mac)).location, "A");
+});
+test("clients cannot override the derived device ID", async () => {
+  assert.equal((await register({ mac, location: "A", device_id: "CAM-FFFF" })).status, 400);
+  const created = await deviceRepository.create({ mac, name: "Board", location: "A", device_id: "CAM-FFFF" });
+  assert.equal(created.device_id, "CAM-4D5E");
+  await assert.rejects(deviceRepository.update(mac, { device_id: "CAM-0000" }));
+});
+test("PostgreSQL uniqueness violations return 409 in standalone and controller hosts", async () => {
+  const spy = mock.method(deviceRepository, "register", async () => { throw Object.assign(new Error("duplicate key"), { code: "23505" }); });
+  try {
+    for (const target of [app, createControllerApp()]) {
+      const result = await request(target).post("/v1/devices/register").set("Authorization", "Bearer " + token()).send({ mac, location: "Room" });
+      assert.equal(result.status, 409);
+    }
+  } finally { spy.mock.restore(); }
 });
 test("required fields, canonical MAC and legacy fields are rejected", async () => {
   for (const body of [

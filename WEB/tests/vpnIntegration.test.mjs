@@ -79,7 +79,7 @@ test("WEB client -> controller -> C1 session and C4 VPN lifecycle", async (t) =>
     await t.test("new camera UI retains C2 MAC registration, list and rename", async () => {
       const camera = await registerCamera({ mac: "00:1a:2b:3c:4d:5e", name: "UI camera", location: "Room" });
       assert.equal(camera.mac, "001A2B3C4D5E");
-      assert.equal(camera.device_id, "001A2B3C4D5E");
+      assert.equal(camera.device_id, "CAM-4D5E");
       await updateCamera(camera.mac, { name: "Renamed camera" });
       assert.equal((await getCameras())[0].name, "Renamed camera");
     });

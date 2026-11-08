@@ -1,12 +1,18 @@
 -- PostgreSQL 17.X. Apply C1 users schema first. Fresh schema only.
 -- Telemetry columns below extend ICD 7.1.2; they are current state, not history.
 DO $$ BEGIN
-  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema=current_schema() AND table_name='devices' AND column_name='device_id') THEN
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema=current_schema() AND table_name='devices' AND column_name='mac_no') THEN
     RAISE EXCEPTION 'Legacy devices detected. Use migrate-v1-to-v2.sql after backup.';
+  END IF;
+  IF to_regclass('devices') IS NOT NULL AND NOT EXISTS (
+    SELECT 1 FROM information_schema.columns WHERE table_schema=current_schema() AND table_name='devices' AND column_name='device_id'
+  ) THEN
+    RAISE EXCEPTION 'Existing MAC schema: apply migrate-add-device-id.sql after backup.';
   END IF;
 END $$;
 CREATE TABLE IF NOT EXISTS devices (
-  mac CHAR(12) PRIMARY KEY CHECK (mac ~ '^[0-9A-F]{12}$'),
+  device_id CHAR(8) PRIMARY KEY CHECK (device_id = 'CAM-' || right(mac, 4)),
+  mac CHAR(12) NOT NULL UNIQUE CHECK (mac ~ '^[0-9A-F]{12}$'),
   user_id UUID REFERENCES users(user_id),
   name VARCHAR(100) NOT NULL,
   location VARCHAR(200) NOT NULL,
@@ -36,3 +42,13 @@ CREATE TABLE IF NOT EXISTS devices (
 );
 CREATE INDEX IF NOT EXISTS c2_devices_user_idx ON devices(user_id);
 CREATE INDEX IF NOT EXISTS c2_devices_online_idx ON devices(last_seen) WHERE is_active AND status='online';
+
+-- Covers SQL seed/manual inserts as well as application inserts.
+CREATE OR REPLACE FUNCTION c2_set_device_id() RETURNS trigger LANGUAGE plpgsql AS $$
+BEGIN
+  NEW.device_id := 'CAM-' || right(NEW.mac, 4);
+  RETURN NEW;
+END $$;
+CREATE OR REPLACE TRIGGER c2_devices_set_id
+BEFORE INSERT OR UPDATE OF mac, device_id ON devices
+FOR EACH ROW EXECUTE FUNCTION c2_set_device_id();

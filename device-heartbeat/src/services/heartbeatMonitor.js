@@ -33,6 +33,7 @@ export class HeartbeatMonitor {
     for (const listener of this.listeners) {
       try {
         await listener({
+          device_id: device.device_id,
           mac: device.mac,
           device_name: device.name,
           old_status: oldStatus,

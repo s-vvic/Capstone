@@ -39,6 +39,7 @@ test(
       const repo = new PostgresDeviceRepository(client);
       const claimed = await repo.register(mac, user, { location: "room" });
       assert.equal(claimed.mac, mac);
+      assert.equal(claimed.device_id, "CAM-4D5E");
       assert.ok(claimed.name.endsWith(mac));
       assert.equal(
         await repo.register(mac, other, { location: "stolen" }),
@@ -130,6 +131,7 @@ test(
       await client.query("INSERT INTO heartbeat_history VALUES ('CAM-4D5E')");
       await client.query(migration);
       assert.equal((await repo.findByMac(mac)).user_id, user);
+      assert.equal((await repo.findByMac(mac)).device_id, "CAM-4D5E");
       assert.equal((await repo.findByMac(mac)).vpn_ip, "10.0.0.10");
       assert.equal((await repo.findByMac(mac)).last_seen, null);
       assert.equal(

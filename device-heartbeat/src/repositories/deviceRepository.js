@@ -1,4 +1,5 @@
 ﻿import { getPool } from "../config/database.js";
+import { deviceIdFromMac } from "../utils/deviceIdentity.js";
 const MUTABLE = new Set([
   "user_id",
   "name",
@@ -31,12 +32,12 @@ export class PostgresDeviceRepository {
   }
   fields(data) {
     const entries = Object.entries(data);
-    if (entries.some(([k]) => k !== "mac" && !MUTABLE.has(k)))
+    if (entries.some(([k]) => k !== "mac" && k !== "device_id" && !MUTABLE.has(k)))
       throw new Error("Unsupported device column");
     return entries;
   }
   async create(data) {
-    const entries = this.fields(data);
+    const entries = this.fields({ ...data, device_id: deviceIdFromMac(data.mac) });
     const result = await this.pool.query(
       "INSERT INTO devices (" +
         entries.map(([k]) => k).join(",") +
@@ -79,12 +80,13 @@ export class PostgresDeviceRepository {
   async register(mac, userId, fields) {
     // One statement prevents concurrent ownership claims from overwriting each other.
     const result = await this.pool.query(
-      "INSERT INTO devices (mac,user_id,name,location,registered_at) VALUES ($1,$2,COALESCE($3,$5),$4,CURRENT_TIMESTAMP) ON CONFLICT (mac) DO UPDATE SET user_id = EXCLUDED.user_id, name = COALESCE($3,devices.name), location = EXCLUDED.location, registered_at = EXCLUDED.registered_at WHERE devices.is_active = true AND (devices.user_id IS NULL OR devices.user_id = EXCLUDED.user_id) RETURNING *",
-      [mac, userId, fields.name ?? null, fields.location, "보드 " + mac],
+      "INSERT INTO devices (device_id,mac,user_id,name,location,registered_at) VALUES ($6,$1,$2,COALESCE($3,$5),$4,CURRENT_TIMESTAMP) ON CONFLICT (mac) DO UPDATE SET device_id = EXCLUDED.device_id, user_id = EXCLUDED.user_id, name = COALESCE($3,devices.name), location = EXCLUDED.location, registered_at = EXCLUDED.registered_at WHERE devices.is_active = true AND (devices.user_id IS NULL OR devices.user_id = EXCLUDED.user_id) RETURNING *",
+      [mac, userId, fields.name ?? null, fields.location, "보드 " + mac, deviceIdFromMac(mac)],
     );
     return result.rows[0] || null;
   }
   async update(mac, fields, userId) {
+    if ("mac" in fields || "device_id" in fields) throw new Error("Device identity is immutable");
     const entries = this.fields(fields);
     if (!entries.length) return this.findByMac(mac);
     const values = entries.map(([, v]) => v);
@@ -110,7 +112,7 @@ export class PostgresDeviceRepository {
   async updateHeartbeat(mac, ip, metrics, now) {
     // Lock the row so the previous status and returned latest config are consistent.
     const result = await this.pool.query(
-      "WITH previous AS MATERIALIZED (SELECT mac, (last_seen IS NOT NULL AND last_seen >= $3::timestamptz - interval '15 seconds') AS was_online FROM devices WHERE mac=$1 AND vpn_ip=$2 AND is_active=true FOR UPDATE) UPDATE devices d SET last_seen=$3, status='online', rtsp_ok=$4, wg_ok=$5, applied_config_version=$6, storage_used_bytes=COALESCE($7,d.storage_used_bytes), latency_ms=COALESCE($8,d.latency_ms), firmware_version=COALESCE($9,d.firmware_version) FROM previous p WHERE d.mac=p.mac RETURNING d.*, p.was_online",
+      "WITH previous AS MATERIALIZED (SELECT mac, (last_seen IS NOT NULL AND last_seen >= $3::timestamptz - interval '15 seconds') AS was_online FROM devices WHERE mac=$1 AND vpn_ip=$2 AND is_active=true FOR UPDATE) UPDATE devices d SET device_id='CAM-' || right(d.mac,4), last_seen=$3, status='online', rtsp_ok=$4, wg_ok=$5, applied_config_version=$6, storage_used_bytes=COALESCE($7,d.storage_used_bytes), latency_ms=COALESCE($8,d.latency_ms), firmware_version=COALESCE($9,d.firmware_version) FROM previous p WHERE d.mac=p.mac RETURNING d.*, p.was_online",
       [
         mac,
         ip,

@@ -33,7 +33,7 @@ psql -v ON_ERROR_STOP=1 -f sql/migrate-v1-to-v2.sql
 | POST   | `/v1/devices/heartbeat`        | 등록된 VPN 출발지 IP와 `mac` 대조, 200 + `config_version` |
 | POST   | `/v1/devices/provision-by-mac` | 기존 VPN 보드 인증 후 명시적 C4 어댑터 연동               |
 
-`mac`은 대문자·콜론 없는 12자리 hex입니다. 구 `device_id`·`mac_no`·`MAC_no`·`serial_no`·`provision_token`, 접두어 없는 경로, `provision-by-serial`, PTZ 및 C4 VPN 제어 경로는 제공하지 않습니다. QR·시리얼·등록 코드 입력과 MAC 등록 간 변환·소유권 확인 계약은 원본 ICD의 보완 대상이며 임의 생성하지 않습니다.
+`mac`은 대문자·콜론 없는 12자리 hex입니다. 서버는 `device_id`를 `CAM-` + MAC 끝 4자리로 자동 생성하며, 보드 정보·heartbeat·프로비저닝의 정상 응답에 `device_id`와 `mac`을 함께 포함합니다. 요청 본문에 `device_id`를 지정할 필요는 없으며 직접 지정은 거부합니다. 기존 요청·경로 키는 `mac`을 유지합니다. 구 `mac_no`·`MAC_no`·`serial_no`·`provision_token`, 접두어 없는 경로, `provision-by-serial`, PTZ 및 C4 VPN 제어 경로는 제공하지 않습니다. QR·시리얼·등록 코드 입력과 MAC 등록 간 변환·소유권 확인 계약은 원본 ICD의 보완 대상입니다.
 
 ### Heartbeat 및 상태
 
@@ -72,12 +72,16 @@ JSON에는 별도의 Integer 자료형이 없으므로 정수 필드는 Number�
 
 ```json
 {
+  "device_id": "CAM-4D5E",
+  "mac": "001A2B3C4D5E",
   "config_version": 3
 }
 ```
 
 | 응답 필드        | 타입    | 예시 | 의미                                                                                         |
 | ---------------- | ------- | ---- | -------------------------------------------------------------------------------------------- |
+| `device_id` | String | `"CAM-4D5E"` | MAC 끝 4자리로 서버가 생성한 보드 식별자입니다. |
+| `mac` | String | `"001A2B3C4D5E"` | 요청을 인증한 보드의 전체 MAC입니다. |
 | `config_version` | Integer | `3`  | 서버에 저장된 해당 보드의 최신 설정 버전. 요청에서 보고한 보드 적용 버전과 다를 수 있습니다. |
 
 위 요청의 적용 버전이 `0`이고 응답이 `3`이면, 보드는 서버에 더 최신 설정이 있음을 확인하고 `GET /v1/board/config`로 설정을 조회합니다. 설정을 적용한 후 다음 heartbeat 요청의 `config_version`에 `3`을 넣어 보고합니다. 응답 버전이 보드 적용 버전보다 크지 않으면 버전 비교에 따른 설정 조회는 필요하지 않습니다. 부팅 직후 설정 조회는 별도로 수행합니다. 설정 조회 API는 ICD에서 `[TBD]`이며 C6 구현 범위입니다.
@@ -169,3 +173,26 @@ DB_SSL_CA_FILE=/home/ubuntu/certs/database-ca.pem
 위 경로는 예시이며 실제 CA 파일 경로로 바꿉니다. 이 파일은 Node.js 서버 프로세스가 읽을 수 있어야 하고 `DB_HOST`도 인증서의 서버 이름과 일치해야 합니다. CA 파일을 지정하지 않으면 Node.js 기본 신뢰 저장소를 사용합니다. 잘못된 파일 경로는 명시적 파일 읽기 오류로 처리하며 인증서 검증을 자동으로 우회하지 않습니다.
 
 단독 C2라면 C2 프로세스의 환경 설정에, 통합 controller라면 controller 프로세스가 로드하는 환경 설정에 추가한 뒤 해당 프로세스를 재시작합니다. 서버 인증서 체인이 불완전한 경우에는 DB 서버의 체인 구성도 함께 수정해야 합니다. 로컬 설정 테스트는 운영 DB와의 TLS 연결 성공을 보증하지 않으므로 배포 후 heartbeat를 다시 보내 로그로 확인합니다.
+
+## device_id 자동 생성 및 기존 DB 반영 (2026-11-08)
+
+예를 들어 요청의 `mac`이 `001A2B3C4D5E`이면 `device_id`는 `CAM-4D5E`입니다.
+
+- 메모리·PostgreSQL 저장소의 신규 등록에서 자동 생성하고, heartbeat 상태 갱신에서도 같은 값을 유지·저장합니다. 클라이언트가 임의 ID나 변경된 MAC으로 기존 보드의 식별자를 덮어쓸 수 없습니다.
+- 등록·목록·상태·정보 수정·프로비저닝·heartbeat의 보드 관련 정상 응답에는 `device_id`와 `mac`을 함께 제공합니다. 오류 응답 형식과 `/health`는 기존 계약을 유지합니다.
+- heartbeat는 계속 VPN 출발지 IP와 전체 MAC으로 인증합니다. 미등록 MAC의 heartbeat를 받아 보드를 자동 등록하는 기능은 추가하지 않았습니다.
+- 신규 `schema.sql`은 사용자가 지정한 `device_id CHAR(8) PRIMARY KEY`를 유지하고 `mac`에 UNIQUE를 추가합니다. 등록 SQL의 `ON CONFLICT (mac)`에는 이 UNIQUE 제약이 필요합니다.
+- DB 트리거도 ID를 자동 계산하므로 SQL 시드에서 `device_id`를 생략할 수 있습니다. CHECK 제약은 `device_id`와 MAC의 파생 관계를 검사합니다.
+- 기존의 단순 `device_id` 존재 여부 검사는 현재 스키마까지 구버전으로 오인하므로, 구버전 판별을 `mac_no` 컬럼 기준으로 수정했습니다.
+
+**기존 테이블은 `CREATE TABLE IF NOT EXISTS`로 변경되지 않습니다.** 현재 MAC 기반 DB 또는 수동으로 `device_id`를 추가한 DB에는 쓰기를 중단·백업한 뒤 다음 스크립트를 실행하고 변경 코드를 배포합니다. 연결 옵션은 실제 DB 환경에 맞게 지정합니다.
+
+```sh
+psql -v ON_ERROR_STOP=1 -f sql/migrate-add-device-id.sql
+```
+
+이 스크립트는 컬럼 추가, 기존 행의 ID 채우기, NOT NULL·MAC/ID UNIQUE·형식 관계 CHECK·자동 생성 트리거를 한 트랜잭션으로 적용합니다. 반복 실행할 수 있으며 기존 PK 및 외래 키는 보존합니다. **기존 DB에서 PK가 `mac`이면 이 스크립트 이후에도 PK는 `mac`이고 `device_id`는 UNIQUE입니다.** 이미 `device_id`가 PK인 DB는 이를 유지합니다. FK 재설계 없이 PK를 강제로 교체하지 않습니다.
+
+서로 다른 MAC의 끝 4자리가 같을 수 있습니다. 예를 들어 `001A2B3C4D5E`와 `AA1122334D5E`는 모두 `CAM-4D5E`가 됩니다. 새 등록은 HTTP 409로 거부하며 기존 보드를 덮어쓰지 않습니다. 이관 전에 이런 충돌이나 잘못된 MAC이 발견되면 스크립트를 중단하고 롤백합니다. 데이터나 FK에 의해 이관이 실패해도 자동으로 데이터를 삭제하거나 CASCADE 처리하지 않습니다.
+
+`mac_no`가 있는 초기 구버전 DB는 기존 `migrate-v1-to-v2.sql` 경로를 사용합니다. 해당 경로도 최신 스키마로 ID를 생성하며 MAC 끝 4자리 충돌을 먼저 검사합니다. 운영 DB에는 자동 이관하지 않으므로 배포 전에 해당 DB용 스크립트를 직접 적용해야 합니다.

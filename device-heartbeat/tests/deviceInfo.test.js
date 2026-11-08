@@ -47,6 +47,8 @@ test("status derives expiration without monitor; no fabricated uptime or handsha
   });
   const res = await get("/v1/devices/" + mac + "/status");
   assert.equal(res.status, 200);
+  assert.equal(res.body.mac, mac);
+  assert.equal(res.body.device_id, "CAM-4D5E");
   assert.equal(res.body.status, "offline");
   assert.equal(
     res.body.rtsp_url,
@@ -81,6 +83,8 @@ test("patch validates strings and cannot change ownership/VPN/config", async () 
   const res = await patch({ name: "거실", location: "거실", description: "" });
   assert.equal(res.status, 200);
   assert.equal(res.body.name, "거실");
+  assert.equal(res.body.mac, mac);
+  assert.equal(res.body.device_id, "CAM-4D5E");
 });
 test("unknown/invalid MAC and malformed JSON return ICD error_code", async () => {
   assert.equal((await get("/v1/devices/AAAAAAAAAAAA/status")).status, 404);
