@@ -1,4 +1,5 @@
 import pg from 'pg';
+import { databaseOptions } from '../../../shared/config.mjs';
 import { env } from './env.js';
 import { logger } from '../utils/logger.js';
 
@@ -13,12 +14,7 @@ export function getDatabasePool() {
 
   if (!pool) {
     pool = new Pool({
-      host: env.DB_HOST,
-      port: env.DB_PORT,
-      user: env.DB_USER,
-      password: env.DB_PASSWORD,
-      database: env.DB_NAME,
-      ssl: env.DB_SSL ? { rejectUnauthorized: false } : false,
+      ...databaseOptions(),
       max: 20,
       idleTimeoutMillis: 30000,
       connectionTimeoutMillis: 5000,

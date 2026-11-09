@@ -1,11 +1,12 @@
 import dotenv from 'dotenv';
+import { apiBaseUrl } from '../../../shared/config.mjs';
 
 dotenv.config();
 
 export const env = {
   NODE_ENV: process.env.NODE_ENV || 'development',
   PORT: parseInt(process.env.PORT || '3000', 10),
-  API_BASE_URL: process.env.API_BASE_URL || 'https://api.securecam.com/v1',
+  API_BASE_URL: apiBaseUrl(process.env, 3000),
 
   // Database (PostgreSQL 17.X)
   DB_DRIVER: process.env.DB_DRIVER || 'memory', // 'postgres' | 'memory'

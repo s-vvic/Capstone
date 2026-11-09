@@ -1,3 +1,5 @@
+> Shared backend environment names and deployment dependency: [shared/README.md](../shared/README.md)
+
 # SecureCam Component 3 — 저장소 관리 모듈
 
 보안 WebCam 시스템(산학캡스톤, 산업 파트너 ㈜스마클) 클라우드 서버 중 **클라우드 저장소 관리(SRS 3.2.4)** 를 담당하는 Express 모듈.
@@ -632,7 +634,7 @@ node scripts/runRetention.js   # basic 삭제, standard는 30일 보관이라 �
 | 구분 | 변수 | 기본값 | 설명 |
 | --- | --- | --- | --- |
 | 서버 | `PORT` | `3002` | |
-| | `PUBLIC_BASE_URL` | `http://localhost:3002` | 다운로드·공유 URL의 앞부분 |
+| | `API_BASE_URL` | `http://localhost:3002/v1` | 다운로드·공유 API 주소. 이전 `PUBLIC_BASE_URL`은 호환용 |
 | DB | `DB_HOST` / `DB_PORT` / `DB_USER` / `DB_PASSWORD` / `DB_NAME` | — | `src/config/database.js` |
 | | `DB_DRIVER` | `postgres` | `memory`면 In-Memory 드라이버 (테스트 전용) |
 | 인증 | `JWT_SECRET` | — | **C1과 같은 값** (다르면 모든 요청 401) |

@@ -1,11 +1,12 @@
 import dotenv from 'dotenv';
+import { apiBaseUrl } from '../../../shared/config.mjs';
 
 dotenv.config();
 
 export const env = {
   NODE_ENV: process.env.NODE_ENV || 'development',
   PORT: parseInt(process.env.PORT || '3002', 10),
-  API_BASE_URL: process.env.API_BASE_URL || 'https://api.securecam.com/v1',
+  API_BASE_URL: apiBaseUrl(process.env, 3002),
 
   // Database (PostgreSQL 17.X - NF-F-001)
   DB_DRIVER: process.env.DB_DRIVER || 'memory', // 'postgres' | 'memory'
@@ -26,5 +27,5 @@ export const env = {
 
   // Snapshot Storage Configuration
   SNAPSHOT_UPLOAD_DIR: process.env.SNAPSHOT_UPLOAD_DIR || './uploads/snapshots',
-  SNAPSHOT_BASE_URL: process.env.SNAPSHOT_BASE_URL || 'https://api.securecam.com/v1/snapshots',
+  SNAPSHOT_BASE_URL: process.env.SNAPSHOT_BASE_URL || `${apiBaseUrl(process.env, 3002)}/snapshots`,
 };

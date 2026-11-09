@@ -1,0 +1,13 @@
+{
+  "name": "securecam-c7-mediamtx",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=24.11.0" },
+  "scripts": {
+    "configure": "node --env-file=.env scripts/configure.js",
+    "start": "node --env-file=.env src/server.js",
+    "test": "node --test tests/*.test.js"
+  },
+  "dependencies": { "express": "4.21.2", "pg": "8.13.1" }
+}

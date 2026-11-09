@@ -1,3 +1,4 @@
+import { publicBaseUrl } from '../../../shared/config.mjs';
 // 공유 링크 (SV-F-031 공유)
 // - 토큰은 무작위 32바이트. DB에는 SHA-256 해시만 저장 → DB가 털려도 링크를 만들 수 없음
 // - 무기한 공유 금지 (보안 카메라 영상 = 개인영상정보)
@@ -34,7 +35,7 @@ export async function createShare(userId, fileId, body) {
     throw new AppError(ERROR_CODES.NOT_FOUND, '파일을 찾을 수 없습니다.');
   }
 
-  const baseUrl = process.env.PUBLIC_BASE_URL ?? 'http://localhost:3002';
+  const baseUrl = publicBaseUrl(process.env, 3002);
   return {
     share_id: share.share_id,
     file_id: share.file_id,

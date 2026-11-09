@@ -1,3 +1,4 @@
+import { publicBaseUrl } from '../../../shared/config.mjs';
 // 서명된 다운로드 URL — 로그인 토큰 없이도 <img src>나 다운로드 매니저에서 쓸 수 있는 링크
 // sig = HMAC-SHA256(비밀키, "{fileId}.{exp}")
 // → 누가 fileId나 만료시각(exp)을 바꾸면 sig가 맞지 않아서 거부됨
@@ -16,7 +17,7 @@ function sign(fileId, exp) {
 // 다운로드 URL 만들기 (기본 15분 유효)
 export function createDownloadUrl(fileId, ttlSec = Number(process.env.SIGNED_URL_TTL_SEC ?? 900)) {
   const exp = Math.floor(Date.now() / 1000) + ttlSec;
-  const baseUrl = process.env.PUBLIC_BASE_URL ?? 'http://localhost:3002';
+  const baseUrl = publicBaseUrl(process.env, 3002);
   return `${baseUrl}/v1/storage/files/${fileId}/download?exp=${exp}&sig=${sign(fileId, exp)}`;
 }
 

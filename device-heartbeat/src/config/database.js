@@ -1,5 +1,5 @@
 import pg from 'pg';
-import { readFileSync } from 'node:fs';
+import { databaseOptions, databaseSsl } from '../../../shared/config.mjs';
 import { env } from './env.js';
 
 const { Pool } = pg;
@@ -7,11 +7,7 @@ const { Pool } = pg;
 let pool = null;
 
 export function buildDatabaseSslConfig(settings = env) {
-  if (!settings.DB_SSL) return false;
-  const ssl = { rejectUnauthorized: true };
-  // Private/self-signed database CAs must be explicitly trusted, not bypassed.
-  if (settings.DB_SSL_CA_FILE) ssl.ca = readFileSync(settings.DB_SSL_CA_FILE, 'utf8');
-  return ssl;
+  return databaseSsl(settings);
 }
 
 /**
@@ -24,12 +20,7 @@ export function getPool() {
 
   if (!pool) {
     pool = new Pool({
-      host: env.DB_HOST,
-      port: env.DB_PORT,
-      user: env.DB_USER,
-      password: env.DB_PASSWORD,
-      database: env.DB_NAME,
-      ssl: buildDatabaseSslConfig(),
+      ...databaseOptions(),
       max: 20,
       idleTimeoutMillis: 30000,
       connectionTimeoutMillis: 5000,

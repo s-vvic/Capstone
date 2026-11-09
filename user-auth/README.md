@@ -1,3 +1,5 @@
+> Shared backend environment names and deployment dependency: [shared/README.md](../shared/README.md)
+
 # SecureCam Cloud Server - 사용자 및 인증 관리 모듈 (v1.0)
 
 > 본 모듈은 **SecureCam** 클라우드 서버의 핵심 부체계인 **3.2.1 사용자 및 인증 관리**를 모듈형 구조로 구현한 Express.js/Node.js 백엔드 패키지입니다.  

@@ -10,7 +10,7 @@ export const config = {
 
   // Database
   dbDriver: (process.env.DB_DRIVER || 'memory').toLowerCase(),
-  databaseUrl: process.env.DATABASE_URL || 'postgresql://securecam:securecam_dev_2026@localhost:5432/securecam_db',
+  // Connection fields and legacy URL fallback are resolved by shared/config.mjs.
 
   // WireGuard Driver: 'virtual' or 'linux'
   wgDriver: (process.env.WG_DRIVER || 'virtual').toLowerCase(),
@@ -24,7 +24,7 @@ export const config = {
   wgConfigPath: process.env.WG_CONFIG_PATH || '/etc/wireguard/wg0.conf',
 
   // Server Keys (기본 더미 키 페어)
-  wgServerPublicKey: process.env.WG_SERVER_PUBLIC_KEY || 'mQZq8v6eX2o9A1t8y4U5i6o7P8q9R0s1T2u3V4w5X6Y=',
+  wgServerPublicKey: process.env.WG_SERVER_PUBLIC_KEY || process.env.WG_SERVER_PUBKEY || 'mQZq8v6eX2o9A1t8y4U5i6o7P8q9R0s1T2u3V4w5X6Y=',
   wgServerPrivateKey: process.env.WG_SERVER_PRIVATE_KEY || '4A7b8C9d0E1f2G3h4I5j6K7l8M9n0O1p2Q3r4S5t6U8=',
 
   // IP Pool

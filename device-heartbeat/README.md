@@ -1,3 +1,5 @@
+> Shared backend environment names and deployment dependency: [shared/README.md](../shared/README.md)
+
 ﻿# SecureCam C2 — 보드 등록 및 생존 관리
 
 적용 기준: `SPEC/FR`, `SPEC/NFR`, `SPEC/ICD_v2.md`, `SPEC/Component.md` v2.1.

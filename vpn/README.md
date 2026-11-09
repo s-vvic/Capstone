@@ -1,3 +1,5 @@
+> Shared backend environment names and deployment dependency: [shared/README.md](../shared/README.md)
+
 # Component 4: WireGuard VPN 컨트롤러 (VPN IP Pool & Tunnel Manager)
 
 SecureCam 플랫폼의 **컴포넌트 4: WireGuard VPN 컨트롤러** 구현체입니다. `SPEC/Component.md`, `SPEC/FR/VPN_F.md`, `SPEC/FR/SV_F.md` (SV-F-014), `SPEC/ICD.md` (ICD-01 2.5, ICD-06) 및 NFR(NF-S-001, NF-A-002/003) 규격을 엄격하게 준수합니다.

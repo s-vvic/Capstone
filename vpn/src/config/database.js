@@ -1,4 +1,5 @@
 import pg from 'pg';
+import { databaseOptions } from '../../../shared/config.mjs';
 import { config } from './env.js';
 
 const { Pool } = pg;
@@ -12,7 +13,7 @@ export function getDatabasePool() {
 
   if (!pool) {
     pool = new Pool({
-      connectionString: config.databaseUrl,
+      ...databaseOptions(),
       max: 10,
       idleTimeoutMillis: 30000,
       connectionTimeoutMillis: 2000,

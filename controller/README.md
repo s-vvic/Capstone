@@ -1,3 +1,5 @@
+> Shared backend environment names and deployment dependency: [shared/README.md](../shared/README.md)
+
 # SecureCam Integrated Controller (Master Controller & Coordinator)
 
 > **통합 컨트롤러 모듈 (`SourceCode/controller`)**  

@@ -1,3 +1,5 @@
+> Shared backend environment names and deployment dependency: [shared/README.md](../shared/README.md)
+
 # SecureCam - Component 3: Event Ingestion & Push Notification Engine
 
 > **컴포넌트 3:** 이벤트 수집 & Push 알림 중계 모듈  
