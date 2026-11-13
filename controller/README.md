@@ -2,6 +2,14 @@
 
 # SecureCam Integrated Controller (Master Controller & Coordinator)
 
+## I2 C7 통합 (2026-11-13)
+
+`MEDIAMTX_ENABLED=true`와 설치한 `MEDIAMTX_BINARY`를 설정하면 `npm start`가 C7 설정 생성·검사·실행·종료를 함께 관리합니다. MediaMTX 영상은 Node를 거치지 않고 VPN IP의 8889/TCP와 8189/UDP로 직접 전달됩니다. C7 폴더도 controller와 함께 배포해야 합니다.
+
+`GET /v1/status`는 JWT 없이 소켓 출발지의 `CLIENT_VPN_SUBNET` 소속 여부를 반환하고, 보드 목록·상태·등록 응답에는 `WEBRTC_BASE_URL` 기반 `webrtc_url`, `webrtc_url_sub`가 포함됩니다. 서버 IP 기본 예시는 `10.0.0.100`입니다. 실제 `.env`의 IP·DB·인증서 설정은 운영 환경에 맞게 유지하세요.
+
+I2에서는 시청 소유권 인증 대신 클라이언트 VPN 대역 read 제한을 적용합니다. 아래 초기 아키텍처 설명보다 최신 [C7 실행 문서](../mediamtx/README.md)와 `SPEC/서버 414d…md`의 I2 계약을 우선합니다. Prettier 설정은 저장소 루트에 있습니다.
+
 > **통합 컨트롤러 모듈 (`SourceCode/controller`)**  
 > **적용 기준:** `SPEC/Component.md`, `SPEC/ICD_v2.md`, `SPEC/FR/*`, `SPEC/NFR/*`  
 > **목적:** 독립적으로 개발된 4개 핵심 백엔드 컴포넌트([C1] User-Auth, [C2] Device-Heartbeat, [C3] Event-Notification, [C5] Storage-Retention)를 단일 진입점(Gateway)으로 통합 마운트하고, 컴포넌트 간 비즈니스 흐름을 오케스트레이션(Orchestration)함.

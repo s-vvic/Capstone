@@ -5,6 +5,8 @@
 적용 기준: `SPEC/FR`, `SPEC/NFR`, `SPEC/ICD_v2.md`, `SPEC/Component.md` v2.1.
 Node.js 24.11 이상 / Express / PostgreSQL 17.X. 메모리 저장소는 개발·격리 테스트용입니다.
 
+I2 추가: 목록·상태·등록 응답에 `webrtc_url`, `webrtc_url_sub`를 포함합니다. `WEBRTC_BASE_URL=http://10.0.0.100:8889`이면 `CAM-xxxx/whep`, `CAM-xxxx_sub/whep` 주소를 응답 시 생성하며 DB에 저장하지 않습니다. base 미설정 또는 vpn_ip가 없으면 둘 다 null, offline이어도 주소는 유지합니다. controller 통합 시 controller/.env 한 곳에서 설정하며 시작 시 base 누락을 경고합니다. 실제 스트림 경로·기동은 [C7 README](../mediamtx/README.md)를 참조하세요.
+
 ## 실행
 
 1. 이 디렉토리에서 `npm ci`를 실행합니다.

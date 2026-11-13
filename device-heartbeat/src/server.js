@@ -2,7 +2,9 @@ import { createDeviceHeartbeatApp } from "./index.js";
 import { env } from "./config/env.js";
 import { testDbConnection, closePool } from "./config/database.js";
 import { heartbeatMonitor } from "./services/heartbeatMonitor.js";
+import { warnMissingWebRtcBase } from "./utils/webrtcUrls.js";
 async function startServer() {
+  warnMissingWebRtcBase(env.WEBRTC_BASE_URL);
   const db = await testDbConnection();
   if (!db.ok) throw new Error("Database unavailable: " + db.error);
   const app = createDeviceHeartbeatApp();

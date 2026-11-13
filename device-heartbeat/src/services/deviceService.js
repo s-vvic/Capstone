@@ -2,6 +2,7 @@ import { deviceRepository } from "../repositories/index.js";
 import { AppError } from "../errors/AppError.js";
 import { env } from "../config/env.js";
 import { deviceIdentity } from "../utils/deviceIdentity.js";
+import { webrtcUrls } from "../utils/webrtcUrls.js";
 import {
   bodyObject,
   macAddress,
@@ -19,6 +20,7 @@ export function onlineStatus(device, now = Date.now()) {
 export function deviceView(d) {
   return {
     ...deviceIdentity(d),
+    ...webrtcUrls(d, env.WEBRTC_BASE_URL),
     name: d.name,
     location: d.location,
     firmware_version: d.firmware_version,
@@ -53,7 +55,10 @@ export class DeviceService {
       result = await deviceRepository.register(data.mac, userId, fields);
     } catch (error) {
       // Preserve the conflict status under the controller's error handler too.
-      if (error.code === "23505") throw AppError.conflict("Duplicate MAC, device_id (same MAC suffix), or VPN IP");
+      if (error.code === "23505")
+        throw AppError.conflict(
+          "Duplicate MAC, device_id (same MAC suffix), or VPN IP",
+        );
       throw error;
     }
     if (!result)
@@ -68,6 +73,7 @@ export class DeviceService {
     const d = await this.ownedDevice(mac, userId);
     return {
       ...deviceIdentity(d),
+      ...webrtcUrls(d, env.WEBRTC_BASE_URL),
       status: onlineStatus(d),
       vpn_status: d.vpn_status,
       vpn_ip: d.vpn_ip,

@@ -1,28 +1,19 @@
-import { createControllerApp } from './app.js';
-import { env } from './config/env.js';
+import { startController } from "./lifecycle.js";
 
-const app = createControllerApp();
-
-const server = app.listen(env.PORT, () => {
-  console.log(`[INFO]  ======================================================`);
-  console.log(`[INFO]  SecureCam Master Controller & Gateway running on port ${env.PORT}`);
-  console.log(`[INFO]  Integrated Components:`);
-  console.log(`[INFO]    - Component 1: User & Auth (/auth)`);
-  console.log(`[INFO]    - Component 2: Device & Heartbeat (/devices, /vpn)`);
-  console.log(`[INFO]    - Component 3: Event & Notification (/events, /notifications)`);
-  console.log(`[INFO]    - Component 5: Storage & Retention (/storage)`);
-  console.log(`[INFO]  Base URL: ${env.API_BASE_URL}`);
-  console.log(`[INFO]  DB Driver: ${env.DB_DRIVER}`);
-  console.log(`[INFO]  ======================================================`);
-});
-
-function gracefulShutdown(signal) {
-  console.log(`[INFO]  Received ${signal}, initiating graceful shutdown...`);
-  server.close(() => {
-    console.log('[INFO]  Master controller server terminated successfully.');
-    process.exit(0);
-  });
+let runtime;
+let requestedStop = false;
+async function stop() {
+  requestedStop = true;
+  if (runtime) await runtime.close();
 }
-
-process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
-process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+process.once("SIGTERM", stop);
+process.once("SIGINT", stop);
+startController()
+  .then(async (controller) => {
+    runtime = controller;
+    if (requestedStop) await runtime.close();
+  })
+  .catch((error) => {
+    console.error(`[controller] Startup failed: ${error.message}`);
+    process.exitCode = 1;
+  });

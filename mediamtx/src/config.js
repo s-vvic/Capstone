@@ -1,146 +1,145 @@
-import { publicBaseUrl } from "../../shared/config.mjs";
 import { isIP } from "node:net";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+import { inSubnet, parseSubnet } from "../../shared/network.mjs";
 
-export function ipv4Number(ip) {
-  if (isIP(ip) !== 4) throw new Error("Expected IPv4 address");
-  return ip.split(".").reduce((n, part) => (n * 256 + Number(part)) >>> 0, 0);
-}
-export function inBoardSubnet(ip, cidr) {
-  if (isIP(ip) !== 4) return false;
-  const [base, bits] = cidr.split("/");
-  const mask = (0xffffffff << (32 - Number(bits))) >>> 0;
-  const value = ipv4Number(ip);
-  const network = (ipv4Number(base) & mask) >>> 0;
-  const broadcast = (network | ~mask) >>> 0;
-  return (
-    (value & mask) >>> 0 === network && value !== network && value !== broadcast
-  );
-}
-function integer(value, fallback, min, max) {
-  const number = value === undefined || value === "" ? fallback : Number(value);
-  if (!Number.isInteger(number) || number < min || number > max)
-    throw new Error("Invalid numeric configuration");
+export const TESTED_VERSION = "v1.21.3";
+const directory = fileURLToPath(new URL("../", import.meta.url));
+
+function port(value, fallback) {
+  const number = Number(value || fallback);
+  if (!Number.isInteger(number) || number < 1 || number > 65535) {
+    throw new Error("Invalid MediaMTX port");
+  }
   return number;
 }
-function endpoint(value, local = false) {
-  const url = new URL(value);
-  if (
-    !["http:", "https:"].includes(url.protocol) ||
-    url.username ||
-    url.password ||
-    url.search ||
-    url.hash
-  )
-    throw new Error("Invalid HTTP endpoint");
-  if (
-    local &&
-    (url.protocol !== "http:" ||
-      url.hostname !== "127.0.0.1" ||
-      url.pathname !== "/")
-  )
-    throw new Error(
-      "MediaMTX control endpoints must use http://127.0.0.1:<port>",
-    );
-  return url.toString().replace(/\/$/, "");
-}
+
 export function loadConfig(env = process.env) {
-  for (const key of ["MTX_API_PASSWORD", "MTX_READ_PASSWORD"]) {
-    if (!env[key] || env[key].length < 32 || /[\r\n]/.test(env[key]))
-      throw new Error(`${key} must contain at least 32 characters`);
+  if (![undefined, "", "true", "false"].includes(env.MEDIAMTX_ENABLED)) {
+    throw new Error("MEDIAMTX_ENABLED must be true or false");
   }
-  if (env.MTX_API_PASSWORD === env.MTX_READ_PASSWORD)
-    throw new Error("Use independent MediaMTX secrets");
-  const boardCidr = env.C7_BOARD_CIDR || "10.0.1.0/24";
-  const [base, prefix, extra] = boardCidr.split("/");
+  const vpnIp = env.WG_SERVER_IP || "10.0.0.100";
+  if (isIP(vpnIp) !== 4) throw new Error("WG_SERVER_IP must be IPv4");
+  const clientSubnet = env.CLIENT_VPN_SUBNET || "10.0.2.0/24";
+  const boardSubnet = env.BOARD_VPN_SUBNET || "10.0.1.0/24";
+  parseSubnet(clientSubnet);
+  parseSubnet(boardSubnet);
+  const webRtcBase = new URL(
+    (env.WEBRTC_BASE_URL || `http://${vpnIp}:8889`).trim().replace(/\/+$/, ""),
+  );
   if (
-    isIP(base) !== 4 ||
-    !/^\d+$/.test(prefix || "") ||
-    +prefix < 1 ||
-    +prefix > 30 ||
-    extra
-  )
-    throw new Error("C7_BOARD_CIDR must be an IPv4 subnet /1 through /30");
-  const vpnIp = env.WG_SERVER_IP || env.MTX_VPN_IP || "10.0.0.1";
-  if (isIP(vpnIp) !== 4)
-    throw new Error("WG_SERVER_IP must be an IPv4 address");
-  const paths = [
-    env.C7_RTSP_HIGH_PATH || "/live/0",
-    env.C7_RTSP_LOW_PATH || "/live/1",
-  ];
-  if (
-    paths.some(
-      (path) => !/^\/[A-Za-z0-9_/-]+$/.test(path) || path.includes(".."),
-    )
-  )
+    webRtcBase.protocol !== "http:" ||
+    webRtcBase.hostname !== vpnIp ||
+    webRtcBase.pathname !== "/" ||
+    webRtcBase.username ||
+    webRtcBase.password ||
+    webRtcBase.search ||
+    webRtcBase.hash
+  ) {
     throw new Error(
-      "RTSP paths must be absolute paths without queries or traversal",
+      "I2 WEBRTC_BASE_URL must be http://<WG_SERVER_IP>:<port> without a path",
     );
-  const origins = (env.C7_ALLOWED_ORIGINS || "")
+  }
+  const api = new URL(env.MTX_API_URL || "http://127.0.0.1:9997");
+  if (
+    api.protocol !== "http:" ||
+    api.hostname !== "127.0.0.1" ||
+    api.pathname !== "/" ||
+    api.username ||
+    api.password ||
+    api.search ||
+    api.hash
+  ) {
+    throw new Error("MTX_API_URL must be a loopback HTTP origin");
+  }
+  const origins = (env.WEBRTC_ALLOWED_ORIGINS || "*")
     .split(",")
-    .map((s) => s.trim())
+    .map((value) => value.trim())
     .filter(Boolean);
   if (
+    !origins.length ||
     origins.some(
-      (origin) => new URL(origin).origin !== origin || origin === "null",
+      (origin) => origin !== "*" && new URL(origin).origin !== origin,
     )
-  )
-    throw new Error("Use explicit CORS origins");
+  ) {
+    throw new Error("Invalid WEBRTC_ALLOWED_ORIGINS");
+  }
+  const boardsFile = resolve(
+    env.MEDIAMTX_BOARDS_FILE || `${directory}/config/boards.json`,
+  );
+  const boards = JSON.parse(readFileSync(boardsFile, "utf8"));
+  if (!Array.isArray(boards) || !boards.length)
+    throw new Error("At least one I2 board is required");
+  const ids = new Set();
+  const ips = new Set();
+  for (const board of boards) {
+    if (
+      !/^CAM-[A-F0-9]{4}$/.test(board.device_id || "") ||
+      !inSubnet(board.vpn_ip || "", boardSubnet, { hostOnly: true }) ||
+      ids.has(board.device_id) ||
+      ips.has(board.vpn_ip)
+    ) {
+      throw new Error("Invalid or duplicate static MediaMTX board");
+    }
+    ids.add(board.device_id);
+    ips.add(board.vpn_ip);
+  }
   return {
-    host: env.C7_BIND_HOST || vpnIp,
-    port: integer(env.PORT ?? env.C7_PORT, 3007, 1, 65535),
-    publicBase: endpoint(
-      env.API_BASE_URL || env.PUBLIC_BASE_URL
-        ? publicBaseUrl(env, 3007)
-        : env.C7_PUBLIC_BASE_URL ||
-            `http://${vpnIp}:${env.PORT || env.C7_PORT || 3007}`,
+    enabled: env.MEDIAMTX_ENABLED === "true",
+    binary: env.MEDIAMTX_BINARY || "mediamtx",
+    configPath: resolve(
+      env.MEDIAMTX_CONFIG_PATH || `${directory}/runtime/mediamtx.yml`,
     ),
-    authMeUrl: endpoint(
-      env.C7_AUTH_ME_URL || "http://127.0.0.1:3000/v1/auth/me",
-    ),
-    apiUrl: endpoint(env.MTX_API_URL || "http://127.0.0.1:9997", true),
-    whepUrl: endpoint(env.MTX_WHEP_URL || "http://127.0.0.1:8889", true),
-    apiPassword: env.MTX_API_PASSWORD,
-    readPassword: env.MTX_READ_PASSWORD,
     vpnIp,
-    boardCidr,
+    clientSubnet,
+    boardSubnet,
     origins,
-    rtspPaths: { high: paths[0], low: paths[1] },
-    rtspPort: integer(env.RTSP_PORT ?? env.C7_RTSP_PORT, 554, 1, 65535),
-    rtspUsername: env.C7_RTSP_USERNAME || "",
-    rtspPassword: env.C7_RTSP_PASSWORD || "",
-    icePort: integer(env.MTX_ICE_UDP_PORT, 8189, 1, 65535),
-    sessionTtlMs: integer(env.C7_SESSION_TTL_SECONDS, 3600, 30, 86400) * 1000,
-    maxSessions: integer(env.C7_MAX_SESSIONS, 256, 1, 100000),
-    maxReaders: integer(env.C7_MAX_READERS_PER_PATH, 0, 0, 100000),
+    boards,
+    webRtcBase: webRtcBase.origin,
+    webRtcAddress: webRtcBase.host,
+    apiUrl: api.origin,
+    apiAddress: api.host,
+    icePort: port(env.MTX_ICE_UDP_PORT, 8189),
+    rtspPort: port(env.RTSP_PORT, 554),
     logLevel: ["error", "warn", "info", "debug"].includes(env.MTX_LOG_LEVEL)
       ? env.MTX_LOG_LEVEL
-      : "warn",
+      : "info",
   };
 }
 
 export function mediaMtxConfig(config) {
+  const paths = {};
+  for (const board of config.boards) {
+    paths[board.device_id] = {
+      source: `rtsp://${board.vpn_ip}:${config.rtspPort}/live/0`,
+      sourceOnDemand: false,
+    };
+    paths[`${board.device_id}_sub`] = {
+      source: `rtsp://${board.vpn_ip}:${config.rtspPort}/live/1`,
+      sourceOnDemand: true,
+    };
+  }
   return {
     logLevel: config.logLevel,
     logDestinations: ["stdout"],
     authMethod: "internal",
     authInternalUsers: [
       {
-        user: "c7-api",
-        pass: config.apiPassword,
-        ips: ["127.0.0.1"],
-        permissions: [{ action: "api" }],
+        user: "any",
+        ips: [config.clientSubnet],
+        permissions: [{ action: "read", path: "~^CAM-[A-F0-9]{4}(_sub)?$" }],
       },
       {
-        user: "c7-reader",
-        pass: config.readPassword,
-        ips: ["127.0.0.1"],
-        permissions: [
-          { action: "read", path: "~^devices/[A-F0-9]{12}/(high|low)$" },
-        ],
+        user: "any",
+        ips: ["127.0.0.1", "::1"],
+        permissions: [{ action: "api" }],
       },
     ],
     api: true,
-    apiAddress: new URL(config.apiUrl).host,
+    apiAddress: config.apiAddress,
+    apiAllowOrigins: [],
+    apiTrustedProxies: [],
     rtsp: false,
     rtmp: false,
     hls: false,
@@ -150,8 +149,9 @@ export function mediaMtxConfig(config) {
     metrics: false,
     pprof: false,
     webrtc: true,
-    webrtcAddress: new URL(config.whepUrl).host,
-    webrtcAllowOrigins: [],
+    webrtcAddress: config.webRtcAddress,
+    webrtcAllowOrigins: config.origins,
+    webrtcTrustedProxies: [],
     webrtcLocalUDPAddress: `${config.vpnIp}:${config.icePort}`,
     webrtcLocalTCPAddress: "",
     webrtcIPsFromInterfaces: false,
@@ -159,13 +159,11 @@ export function mediaMtxConfig(config) {
     webrtcICEServers2: [],
     udpMaxPayloadSize: 1200,
     pathDefaults: {
-      sourceOnDemand: true,
+      rtspTransport: "tcp",
       sourceOnDemandStartTimeout: "10s",
       sourceOnDemandCloseAfter: "10s",
-      rtspTransport: "tcp",
-      maxReaders: config.maxReaders,
       record: false,
     },
-    paths: {},
+    paths,
   };
 }

@@ -1,0 +1,25 @@
+[Unit]
+Description=SecureCam Controller with managed MediaMTX
+After=network-online.target
+Wants=network-online.target
+# If appropriate, add your actual wg-quick@<interface>.service dependency.
+
+[Service]
+Type=simple
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/opt/securecam/SourceCode/controller
+# Existing C4 requires network management capability. Configuration file write
+# permissions must separately allow this user to manage WG_CONFIG_PATH.
+AmbientCapabilities=CAP_NET_ADMIN
+CapabilityBoundingSet=CAP_NET_ADMIN
+# If your database requires Node's extra CA, set the real path BEFORE Node starts:
+# Environment=NODE_EXTRA_CA_CERTS=/home/ubuntu/certs/database-ca.pem
+ExecStart=/usr/local/bin/node --env-file=.env src/server.js
+Restart=on-failure
+RestartSec=5
+KillMode=control-group
+TimeoutStopSec=15
+
+[Install]
+WantedBy=multi-user.target

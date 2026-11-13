@@ -1,0 +1,4 @@
+[
+  { "device_id": "CAM-E099", "vpn_ip": "10.0.1.2" },
+  { "device_id": "CAM-04AF", "vpn_ip": "10.0.1.1" }
+]

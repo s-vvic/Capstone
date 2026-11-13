@@ -1,0 +1,18 @@
+[Unit]
+Description=SecureCam standalone MediaMTX (do not combine with controller-managed mode)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/opt/securecam/SourceCode/mediamtx
+ExecStartPre=/usr/local/bin/node --env-file=.env scripts/configure.js
+ExecStart=/usr/local/bin/mediamtx runtime/mediamtx.yml
+Restart=on-failure
+RestartSec=5
+KillMode=control-group
+
+[Install]
+WantedBy=multi-user.target

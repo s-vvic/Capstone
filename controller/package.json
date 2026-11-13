@@ -1,11 +1,12 @@
 {
   "name": "securecam-integrated-controller",
   "version": "1.0.0",
-  "description": "SecureCam Cloud Server - Master Controller & Coordinator Gateway for Components 1, 2, 3, and 5",
+  "description": "SecureCam integrated API controller and managed C7 MediaMTX runtime",
   "main": "src/index.js",
   "type": "module",
   "scripts": {
     "start": "node --env-file=.env src/server.js",
+    "media:configure": "node --env-file=.env ../mediamtx/scripts/configure.js",
     "dev": "node --env-file=.env --watch src/server.js",
     "test": "node --env-file=.env --test tests/*.test.js"
   },
