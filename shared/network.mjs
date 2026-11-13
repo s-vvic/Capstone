@@ -1,5 +1,28 @@
 import { isIP } from "node:net";
 
+export function httpsProxyEnabled(env = process.env) {
+  if (![undefined, "", "true", "false"].includes(env.HTTPS_PROXY_ENABLED)) {
+    throw new Error("HTTPS_PROXY_ENABLED must be true or false");
+  }
+  return env.HTTPS_PROXY_ENABLED === "true";
+}
+
+export function clientAddress(req, trustLoopbackProxy = false) {
+  const socketIp = normalizeIp(req.socket.remoteAddress || "");
+  const local = socketIp === "::1" || inSubnet(socketIp, "127.0.0.0/8");
+  const forwarded = req.headers?.["x-forwarded-for"];
+  // Nginx must OVERWRITE this header with $remote_addr, not append client input.
+  if (
+    trustLoopbackProxy &&
+    local &&
+    typeof forwarded === "string" &&
+    isIP(forwarded.trim())
+  ) {
+    return normalizeIp(forwarded.trim());
+  }
+  return socketIp;
+}
+
 export function normalizeIp(ip = "") {
   return ip.startsWith("::ffff:") ? ip.slice(7) : ip;
 }

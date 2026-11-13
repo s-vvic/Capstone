@@ -49,7 +49,10 @@ export function createControllerApp({ mediaRuntime } = {}) {
   });
 
   // I2: no JWT check; only the socket address is trusted, never forwarded headers.
-  app.get("/v1/status", createVpnStatusHandler(env.CLIENT_VPN_SUBNET));
+  app.get(
+    "/v1/status",
+    createVpnStatusHandler(env.CLIENT_VPN_SUBNET, env.HTTPS_PROXY_ENABLED),
+  );
 
   // ICD-01 베이스 URL 규격 지원: /v1 및 루트 / 모두 지원
   app.use("/v1", routes);

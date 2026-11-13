@@ -1,5 +1,6 @@
 import dotenv from "dotenv";
 import { apiBaseUrl } from "../../../shared/config.mjs";
+import { httpsProxyEnabled } from "../../../shared/network.mjs";
 
 dotenv.config();
 
@@ -29,4 +30,5 @@ export const env = {
   // Storage Root (Component 5)
   STORAGE_ROOT: process.env.STORAGE_ROOT,
   CLIENT_VPN_SUBNET: process.env.CLIENT_VPN_SUBNET || "10.0.2.0/24",
+  HTTPS_PROXY_ENABLED: httpsProxyEnabled(),
 };

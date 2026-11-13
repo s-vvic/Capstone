@@ -3,6 +3,36 @@ import assert from "node:assert/strict";
 import request from "supertest";
 import { createControllerApp } from "../src/app.js";
 import { createVpnStatusHandler } from "../src/routes/vpnStatus.js";
+import { clientAddress } from "../../shared/network.mjs";
+
+test("HTTPS proxy mode trusts only a single IP from the local Nginx socket", () => {
+  const req = (socket, header) => ({
+    socket: { remoteAddress: socket },
+    headers: { "x-forwarded-for": header },
+  });
+  assert.equal(clientAddress(req("127.0.0.1", "10.0.2.3"), true), "10.0.2.3");
+  assert.equal(clientAddress(req("127.0.0.1", "10.0.2.3"), false), "127.0.0.1");
+  assert.equal(clientAddress(req("10.0.1.2", "10.0.2.3"), true), "10.0.1.2");
+  assert.equal(
+    clientAddress(req("::ffff:127.0.0.1", "10.0.2.3"), true),
+    "10.0.2.3",
+  );
+  assert.equal(
+    clientAddress(req("127.0.0.1", "10.0.2.3, 1.2.3.4"), true),
+    "127.0.0.1",
+  );
+  let result;
+  createVpnStatusHandler("10.0.2.0/24", true)(req("127.0.0.1", "10.0.2.3"), {
+    set() {},
+    status() {
+      return this;
+    },
+    json(body) {
+      result = body;
+    },
+  });
+  assert.deepEqual(result, { connected: true, client_ip: "10.0.2.3" });
+});
 
 test("VPN status uses only the socket IP, including mapped IPv4 and configured subnet", () => {
   const handler = createVpnStatusHandler("10.0.2.0/24");

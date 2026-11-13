@@ -1,13 +1,13 @@
 import {
   inSubnet,
-  normalizeIp,
+  clientAddress,
   parseSubnet,
 } from "../../../shared/network.mjs";
 
-export function createVpnStatusHandler(subnet) {
+export function createVpnStatusHandler(subnet, trustLoopbackProxy = false) {
   parseSubnet(subnet);
   return (req, res) => {
-    const clientIp = normalizeIp(req.socket.remoteAddress || "");
+    const clientIp = clientAddress(req, trustLoopbackProxy);
     res.set("Cache-Control", "no-store");
     res
       .status(200)

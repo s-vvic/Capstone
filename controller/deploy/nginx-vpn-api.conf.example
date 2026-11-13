@@ -1,0 +1,43 @@
+# Replace api.example.com with a domain YOU OWN and issue its certificate first.
+# Install as /etc/nginx/sites-available/securecam-api.
+# The WireGuard address must exist before Nginx starts.
+server {
+  listen 10.0.0.100:443 ssl;
+  server_name api.example.com;
+
+  ssl_certificate /etc/letsencrypt/live/api.example.com/fullchain.pem;
+  ssl_certificate_key /etc/letsencrypt/live/api.example.com/privkey.pem;
+  ssl_protocols TLSv1.2 TLSv1.3;
+
+  allow 10.0.2.0/24;
+  deny all;
+  client_max_body_size 15m;
+
+  # Overwrite untrusted client headers; do not use $proxy_add_x_forwarded_for.
+  proxy_set_header Host $host;
+  proxy_set_header X-Forwarded-Host $host;
+  proxy_set_header X-Forwarded-Proto https;
+  proxy_set_header X-Forwarded-For $remote_addr;
+  proxy_set_header X-Real-IP $remote_addr;
+  proxy_http_version 1.1;
+  proxy_connect_timeout 5s;
+  proxy_read_timeout 30s;
+  proxy_redirect off;
+
+  location /v1/ {
+    proxy_pass http://127.0.0.1:3000;
+  }
+
+  # Native WHEP, session PATCH/DELETE and MediaMTX's diagnostic player pages.
+  location ~ "^/CAM-[A-F0-9]{4}(_sub)?(/.*)?$" {
+    # MediaMTX trusts forwarded IPs ONLY from this server address in proxy mode.
+    proxy_bind 10.0.0.100;
+    proxy_pass http://10.0.0.100:8889;
+    proxy_buffering off;
+  }
+
+  # Never expose MediaMTX's API :9997 or arbitrary backend routes.
+  location / {
+    return 404;
+  }
+}

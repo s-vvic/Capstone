@@ -2,7 +2,11 @@ import { isIP } from "node:net";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { inSubnet, parseSubnet } from "../../shared/network.mjs";
+import {
+  inSubnet,
+  parseSubnet,
+  httpsProxyEnabled,
+} from "../../shared/network.mjs";
 
 export const TESTED_VERSION = "v1.21.3";
 const directory = fileURLToPath(new URL("../", import.meta.url));
@@ -16,6 +20,7 @@ function port(value, fallback) {
 }
 
 export function loadConfig(env = process.env) {
+  const httpsProxy = httpsProxyEnabled(env);
   if (![undefined, "", "true", "false"].includes(env.MEDIAMTX_ENABLED)) {
     throw new Error("MEDIAMTX_ENABLED must be true or false");
   }
@@ -29,8 +34,9 @@ export function loadConfig(env = process.env) {
     (env.WEBRTC_BASE_URL || `http://${vpnIp}:8889`).trim().replace(/\/+$/, ""),
   );
   if (
-    webRtcBase.protocol !== "http:" ||
-    webRtcBase.hostname !== vpnIp ||
+    (httpsProxy
+      ? webRtcBase.protocol !== "https:"
+      : webRtcBase.protocol !== "http:" || webRtcBase.hostname !== vpnIp) ||
     webRtcBase.pathname !== "/" ||
     webRtcBase.username ||
     webRtcBase.password ||
@@ -38,7 +44,9 @@ export function loadConfig(env = process.env) {
     webRtcBase.hash
   ) {
     throw new Error(
-      "I2 WEBRTC_BASE_URL must be http://<WG_SERVER_IP>:<port> without a path",
+      httpsProxy
+        ? "WEBRTC_BASE_URL must be an HTTPS origin without a path in proxy mode"
+        : "I2 WEBRTC_BASE_URL must be http://<WG_SERVER_IP>:<port> without a path",
     );
   }
   const api = new URL(env.MTX_API_URL || "http://127.0.0.1:9997");
@@ -97,7 +105,10 @@ export function loadConfig(env = process.env) {
     origins,
     boards,
     webRtcBase: webRtcBase.origin,
-    webRtcAddress: webRtcBase.host,
+    webRtcAddress: httpsProxy
+      ? `${vpnIp}:${port(env.MTX_WEBRTC_PORT, 8889)}`
+      : webRtcBase.host,
+    httpsProxy,
     apiUrl: api.origin,
     apiAddress: api.host,
     icePort: port(env.MTX_ICE_UDP_PORT, 8189),
@@ -151,7 +162,8 @@ export function mediaMtxConfig(config) {
     webrtc: true,
     webrtcAddress: config.webRtcAddress,
     webrtcAllowOrigins: config.origins,
-    webrtcTrustedProxies: [],
+    // Nginx connects to the same host's VPN listener, using its VPN source IP.
+    webrtcTrustedProxies: config.httpsProxy ? [`${config.vpnIp}/32`] : [],
     webrtcLocalUDPAddress: `${config.vpnIp}:${config.icePort}`,
     webrtcLocalTCPAddress: "",
     webrtcIPsFromInterfaces: false,

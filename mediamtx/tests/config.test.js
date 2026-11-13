@@ -5,6 +5,28 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { loadConfig, mediaMtxConfig } from "../src/config.js";
 
+test("HTTPS domain is external only; native listeners and trusted proxy stay VPN-scoped", () => {
+  const config = loadConfig({
+    HTTPS_PROXY_ENABLED: "true",
+    WG_SERVER_IP: "10.0.0.100",
+    WEBRTC_BASE_URL: "https://api.securecam.com",
+  });
+  const native = mediaMtxConfig(config);
+  assert.equal(config.webRtcBase, "https://api.securecam.com");
+  assert.equal(native.webrtcAddress, "10.0.0.100:8889");
+  assert.equal(native.webrtcLocalUDPAddress, "10.0.0.100:8189");
+  assert.deepEqual(native.webrtcTrustedProxies, ["10.0.0.100/32"]);
+  assert.deepEqual(native.authInternalUsers[0].ips, ["10.0.2.0/24"]);
+  assert.throws(
+    () =>
+      loadConfig({
+        HTTPS_PROXY_ENABLED: "true",
+        WEBRTC_BASE_URL: "http://10.0.0.100:8889",
+      }),
+    /HTTPS origin/,
+  );
+});
+
 test("I2 binds WHEP and ICE only to VPN, advertises only VPN candidates, and disables unused outputs", () => {
   const config = mediaMtxConfig(loadConfig({}));
   assert.equal(config.webrtcAddress, "10.0.0.100:8889");
